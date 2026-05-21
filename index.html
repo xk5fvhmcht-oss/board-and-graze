@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Board & Graze">
+  <meta name="description" content="Charcuterie board randomizer — Dallas stores">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <title>Board &amp; Graze</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 1 — THEME + SETUP
+════════════════════════════════════════════ -->
+<div id="screen-setup" class="screen active">
+  <header class="app-header">
+    <div class="header-inner">
+      <h1 class="app-title">Board <span class="amp">&amp;</span> Graze</h1>
+      <p class="app-sub">Charcuterie randomizer · Dallas</p>
+    </div>
+    <button class="btn-icon" id="btn-customize" aria-label="Customize">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/>
+        <path d="M12 2v2m0 16v2M2 12h2m16 0h2"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="setup-main">
+
+    <!-- THEME TILES -->
+    <section class="section">
+      <h2 class="section-label">Choose your themes</h2>
+      <p class="section-hint">Select one or more — compatible pairings highlighted</p>
+      <div class="theme-grid" id="theme-grid"></div>
+      <div class="clash-warning" id="clash-warning" hidden>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+        <span id="clash-text"></span>
+      </div>
+    </section>
+
+    <!-- BOARD SIZE -->
+    <section class="section">
+      <h2 class="section-label">Board size</h2>
+      <div class="size-row" id="size-row">
+        <button class="size-btn" data-size="S">
+          <span class="size-letter">S</span>
+          <span class="size-desc">Small</span>
+          <span class="size-note">1 item / category</span>
+        </button>
+        <button class="size-btn active" data-size="M">
+          <span class="size-letter">M</span>
+          <span class="size-desc">Medium</span>
+          <span class="size-note">2 items / category</span>
+        </button>
+        <button class="size-btn" data-size="L">
+          <span class="size-letter">L</span>
+          <span class="size-desc">Large</span>
+          <span class="size-note">4 items / category</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- MEAL ROLE -->
+    <section class="section">
+      <h2 class="section-label">This board is</h2>
+      <div class="role-row" id="role-row">
+        <button class="role-btn" data-role="appetizer">
+          <span class="role-icon">🥂</span>
+          <span class="role-label">Appetizer</span>
+          <span class="role-note">Before a meal</span>
+        </button>
+        <button class="role-btn active" data-role="main">
+          <span class="role-icon">🍽️</span>
+          <span class="role-label">Main Course</span>
+          <span class="role-note">This is the meal</span>
+        </button>
+        <button class="role-btn" data-role="grazing">
+          <span class="role-icon">🎉</span>
+          <span class="role-label">Grazing Table</span>
+          <span class="role-note">Extended gathering</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ROLL BUTTON -->
+    <div class="roll-wrap">
+      <button class="btn-roll" id="btn-roll" disabled>
+        <span class="roll-label">Roll the Board</span>
+        <span class="roll-hint" id="roll-hint">Select at least one theme</span>
+      </button>
+    </div>
+
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 2 — BOARD RESULTS
+════════════════════════════════════════════ -->
+<div id="screen-board" class="screen">
+  <header class="app-header">
+    <button class="btn-icon btn-back" id="btn-back" aria-label="Back">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-inner center">
+      <h1 class="app-title sm">Your Board</h1>
+      <p class="app-sub" id="board-meta"></p>
+    </div>
+    <button class="btn-icon" id="btn-share" aria-label="Share">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/><polyline points="16 6 12 2 8 6"/><line x1="12" y1="2" x2="12" y2="15"/>
+      </svg>
+    </button>
+  </header>
+
+  <main class="board-main" id="board-main">
+    <!-- Dynamically populated -->
+  </main>
+
+  <div class="board-actions">
+    <button class="btn-secondary" id="btn-reroll-all">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      Reroll all
+    </button>
+    <button class="btn-primary" id="btn-shopping-list">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Shopping List
+    </button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 3 — SHOPPING LIST
+════════════════════════════════════════════ -->
+<div id="screen-shopping" class="screen">
+  <header class="app-header">
+    <button class="btn-icon btn-back" id="btn-back-shop" aria-label="Back">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-inner center">
+      <h1 class="app-title sm">Shopping List</h1>
+    </div>
+    <button class="btn-icon" id="btn-print" aria-label="Print">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+      </svg>
+    </button>
+  </header>
+  <main class="shopping-main" id="shopping-main">
+    <!-- Dynamically populated -->
+  </main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     PANEL — CUSTOMIZE (slide-up)
+════════════════════════════════════════════ -->
+<div id="panel-customize" class="panel" hidden>
+  <div class="panel-overlay" id="panel-overlay"></div>
+  <div class="panel-sheet">
+    <div class="panel-header">
+      <h2 class="panel-title">Customize</h2>
+      <button class="btn-icon" id="btn-close-customize" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="panel-body">
+
+      <!-- HEADCOUNT -->
+      <div class="customize-section">
+        <label class="customize-label">Number of guests</label>
+        <div class="stepper">
+          <button class="stepper-btn" id="stepper-down" aria-label="Fewer guests">−</button>
+          <span class="stepper-val" id="stepper-val">6</span>
+          <button class="stepper-btn" id="stepper-up" aria-label="More guests">+</button>
+        </div>
+      </div>
+
+      <!-- CATEGORY SLIDERS -->
+      <div class="customize-section">
+        <label class="customize-label">Items per category</label>
+        <p class="customize-hint">Slide to 0 to exclude a category</p>
+        <div id="cat-sliders"></div>
+      </div>
+
+      <!-- EXCLUDED ITEMS -->
+      <div class="customize-section" id="excluded-section" hidden>
+        <label class="customize-label">Hidden items</label>
+        <p class="customize-hint">Items you've marked "Don't show again"</p>
+        <div id="excluded-list"></div>
+        <button class="btn-text-danger" id="btn-restore-all">Restore all hidden items</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+    }
+  </script>
+  <script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
