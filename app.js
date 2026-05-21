@@ -626,6 +626,9 @@ function init() {
   initRoleButtons();
   initSliders();
   $('stepper-val').textContent = state.headCount;
+  // Show version in footer
+  const vEl = document.getElementById('app-version');
+  if (vEl) vEl.textContent = 'v' + APP_VERSION;
 }
 
 init();
