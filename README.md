@@ -1,4 +1,4 @@
-# Board & Graze 🧀
+# Omar's Board & Graze 🧀
 
 A charcuterie board randomizer built for Dallas — pork-free by design, sourced from three local stores.
 

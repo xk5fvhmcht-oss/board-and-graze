@@ -88,12 +88,12 @@ function updateThemeUI() {
   const clashes = themesClash(state.selectedThemes);
   const warn = $('clash-warning');
   if (clashes.length > 0) {
-    warn.hidden = false;
+    warn.style.display = 'flex';
     $('clash-text').textContent =
       'These combinations may not pair well: ' + clashes.join(', ') +
       '. Your board will still roll — but flavors may feel mismatched.';
   } else {
-    warn.hidden = true;
+    warn.style.display = 'none';
   }
 
   // Update roll button
@@ -573,7 +573,7 @@ $('btn-restore-all').addEventListener('click', () => {
 // ── SHARE ──
 $('btn-share').addEventListener('click', async () => {
   const themes = state.selectedThemes.map(id => THEMES.find(t => t.id === id).label).join(', ');
-  const lines = [`🧀 Board & Graze — ${themes}`, `${BOARD_SIZES[state.boardSize].label} board · ${MEAL_ROLES[state.mealRole].label} · ${state.headCount} guests`, ''];
+  const lines = [`🧀 Omar's Board & Graze — ${themes}`, `${BOARD_SIZES[state.boardSize].label} board · ${MEAL_ROLES[state.mealRole].label} · ${state.headCount} guests`, ''];
   Object.entries(state.currentBoard).forEach(([cat, items]) => {
     if (items.length > 0) {
       lines.push(`${CAT_META[cat].icon} ${CAT_META[cat].label}: ${items.map(i => i.name).join(', ')}`);
@@ -583,7 +583,7 @@ $('btn-share').addEventListener('click', async () => {
 
   if (navigator.share) {
     try {
-      await navigator.share({ title: 'Board & Graze', text });
+      await navigator.share({ title: "Omar's Board & Graze", text });
     } catch {}
   } else {
     await navigator.clipboard.writeText(text);
@@ -593,6 +593,31 @@ $('btn-share').addEventListener('click', async () => {
     setTimeout(() => { btn.innerHTML = original; }, 1500);
   }
 });
+
+// ── RESET ──
+function resetApp() {
+  state.selectedThemes  = [];
+  state.boardSize       = 'M';
+  state.mealRole        = 'main';
+  state.categoryLimits  = {};
+  state.currentBoard    = {};
+
+  // Reset size buttons
+  document.querySelectorAll('.size-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.size === 'M')
+  );
+
+  // Reset role buttons
+  document.querySelectorAll('.role-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.role === 'main')
+  );
+
+  updateThemeUI();
+  updateSliders();
+  showScreen('setup');
+}
+
+$('btn-reset').addEventListener('click', resetApp);
 
 // ── BOOTSTRAP ──
 function init() {

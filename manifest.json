@@ -1,14 +1,22 @@
 {
-  "name": "Board & Graze",
-  "short_name": "Board & Graze",
-  "description": "Charcuterie board randomizer — Dallas",
+  "name": "Omar's Board & Graze",
+  "short_name": "Omar's Board",
+  "description": "Omar's charcuterie board randomizer — Dallas",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5efe6",
   "theme_color": "#f5efe6",
   "orientation": "portrait",
   "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
   ]
 }
