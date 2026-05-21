@@ -260,16 +260,11 @@ const ITEMS = {
     { name: "Halal beef sujuk, sliced",       store: ["SM", "AG"],      themes: ["turkish", "middleeastern", "levantine"] },
 
     // Middle Eastern / Levantine
-    { name: "Lamb merguez, sliced",           store: ["SM"],            themes: ["northafrican", "middleeastern", "levantine"] },
-    { name: "Beef kafta, sliced",             store: ["SM"],            themes: ["middleeastern", "levantine"] },
     { name: "Smoked beef basturma",           store: ["SM", "AG"],      themes: ["middleeastern", "levantine", "persian", "turkish"] },
 
     // Persian
-    { name: "Lamb koobideh, sliced",          store: ["SM"],            themes: ["persian", "middleeastern"] },
 
     // North African
-    { name: "Lamb merguez",                   store: ["SM"],            themes: ["northafrican", "mediterranean"] },
-    { name: "Spiced beef kefta",              store: ["SM"],            themes: ["northafrican", "middleeastern"] },
 
     // French
     { name: "Duck rillettes",                 store: ["CM"],            themes: ["french"] },
@@ -277,7 +272,6 @@ const ITEMS = {
     { name: "Chicken liver mousse",           store: ["CM"],            themes: ["french"] },
 
     // Greek
-    { name: "Lamb loukaniko, sliced",         store: ["CM", "SM"],      themes: ["greek", "mediterranean"] },
   ],
 
   // ----------------------------------------------------------
