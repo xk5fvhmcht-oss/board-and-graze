@@ -1,10 +1,18 @@
 // ============================================================
-// CHARCUTERIE RANDOMIZER — DATA MODEL
-// All items are pork-free by design.
+// OMAR'S BOARD & GRAZE — DATA.JS
+// Version 1.2.0
+// "Built on a Levantine American palate —
+//  where hummus and cheddar belong on the same board."
+//
+// All items pork-free. Board-ready, no cooking required.
 // Stores: CM = Central Market, SM = Sara's Mediterranean, AG = Altin Grocery
-// Themes: american, latin, mediterranean, french, italian, spanish,
-//         greek, turkish, middleeastern, northafrican, persian, levantine
+// Profiles: C = Classic, S = Standard, E = Explorer
+//   C — everyday on a Levantine American table
+//   S — elevated but approachable, food-curious crowd
+//   E — specialty, deep cuts, even a Levantine American pauses here
 // ============================================================
+
+const APP_VERSION = "1.2.0";
 
 const THEMES = [
   { id: "american",      label: "American",        flag: "🇺🇸" },
@@ -21,546 +29,378 @@ const THEMES = [
   { id: "levantine",     label: "Levantine",       flag: "🫒" },
 ];
 
-// Theme compatibility matrix.
-// Pairs listed here trigger a warning in the UI.
-// Logic: geographic/culinary distance is too large for a coherent board.
 const THEME_CLASHES = [
-  ["american", "middleeastern"],
-  ["american", "persian"],
-  ["american", "levantine"],
-  ["american", "northafrican"],
-  ["american", "turkish"],
-  ["latin",    "northafrican"],
-  ["latin",    "persian"],
-  ["latin",    "middleeastern"],
-  ["latin",    "levantine"],
-  ["latin",    "turkish"],
-  ["french",   "middleeastern"],
-  ["french",   "persian"],
-  ["french",   "northafrican"],
+  ["american",   "middleeastern"],
+  ["american",   "persian"],
+  ["american",   "levantine"],
+  ["american",   "northafrican"],
+  ["american",   "turkish"],
+  ["latin",      "northafrican"],
+  ["latin",      "persian"],
+  ["latin",      "middleeastern"],
+  ["latin",      "levantine"],
+  ["latin",      "turkish"],
+  ["french",     "middleeastern"],
+  ["french",     "persian"],
+  ["french",     "northafrican"],
 ];
 
-// Natural pairings — shown as a soft suggestion (optional, informational only)
-const THEME_AFFINITIES = [
-  ["mediterranean", "greek", "italian"],
-  ["middleeastern", "levantine", "northafrican", "turkish"],
-  ["french", "italian", "spanish"],
-  ["persian", "levantine", "middleeastern"],
-  ["turkish", "greek", "middleeastern"],
-];
-
-// Board size → items per category
 const BOARD_SIZES = {
   S: { label: "Small",  description: "1–2 people",  itemsPerCategory: 1 },
   M: { label: "Medium", description: "3–5 people",  itemsPerCategory: 2 },
   L: { label: "Large",  description: "6–10 people", itemsPerCategory: 4 },
 };
 
-// Meal role modes — drives all serving quantity math
 const MEAL_ROLES = {
-  appetizer: {
-    label: "Appetizer",
-    description: "Light — before a meal",
-    icon: "🥂",
-  },
-  main: {
-    label: "Main Course",
-    description: "This is the meal",
-    icon: "🍽️",
-  },
-  grazing: {
-    label: "Grazing Table",
-    description: "Extended gathering, people return",
-    icon: "🎉",
-  },
+  appetizer: { label: "Appetizer",     description: "Light — before a meal",  icon: "🥂" },
+  main:      { label: "Main Course",   description: "This is the meal",       icon: "🍽️" },
+  grazing:   { label: "Grazing Table", description: "Extended gathering",     icon: "🎉" },
 };
 
-// Serving guidance per category, per person, per meal role
-// Quantities are per person. When multiple items share a category,
-// divide total by item count to get per-item quantity.
-// unit: "oz" | "pieces" | "tbsp"
+// Board personality profiles
+const PROFILES = {
+  classic:  { label: "Classic",  icon: "🧺", description: "Familiar favorites — no explanations needed" },
+  standard: { label: "Curated",  icon: "🌿", description: "Elevated but approachable" },
+  explorer: { label: "Explorer", icon: "🌶️", description: "The full board experience" },
+};
+
+// Which item profiles are included per board profile
+// classic  → C only
+// standard → C + S
+// explorer → C + S + E
+const PROFILE_INCLUDES = {
+  classic:  ["C"],
+  standard: ["C", "S"],
+  explorer: ["C", "S", "E"],
+};
+
 const SERVING_GUIDANCE = {
   meats: {
-    unit: "oz",
-    appetizer: 1.5,
-    main:       4,
-    grazing:    6,
+    unit: "oz", appetizer: 1.5, main: 4, grazing: 6,
     tip: "Serve at room temperature. Slice thin. Fan or fold on the board.",
   },
   cheeses: {
-    unit: "oz",
-    appetizer: 1.5,
-    main:       3,
-    grazing:    4,
+    unit: "oz", appetizer: 1.5, main: 3, grazing: 4,
     tip: "Pull from fridge 30–45 min before serving. Offer a mix of soft, semi-firm, and aged.",
   },
   fruits: {
-    unit: "oz",
-    appetizer: 2,
-    main:       3,
-    grazing:    4,
+    unit: "oz", appetizer: 2, main: 3, grazing: 4,
     tip: "Mix fresh and dried. Fresh figs and grapes add visual height.",
   },
   crackers: {
-    unit: "pieces",
-    appetizer: 4,
-    main:       10,
-    grazing:    14,
+    unit: "pieces", appetizer: 4, main: 10, grazing: 14,
     tip: "Offer at least two textures — one neutral, one seeded or spiced.",
   },
   breads: {
-    unit: "pieces",
-    appetizer: 2,
-    main:       4,
-    grazing:    6,
+    unit: "pieces", appetizer: 2, main: 4, grazing: 6,
     tip: "Warm pita just before serving. Slice baguette at an angle.",
   },
   nuts: {
-    unit: "oz",
-    appetizer: 0.5,
-    main:       1.5,
-    grazing:    2,
-    tip: "Use as gap-fillers and height builders on the board. Roast if unroasted.",
+    unit: "oz", appetizer: 0.5, main: 1.5, grazing: 2,
+    tip: "Use as gap-fillers and height builders. Roast if unroasted.",
   },
   spreads: {
-    unit: "tbsp",
-    appetizer: 1,
-    main:       2,
-    grazing:    3,
-    tip: "Serve in small bowls or ramekins. Label unfamiliar ones (harissa, muhammara).",
+    unit: "tbsp", appetizer: 1, main: 2, grazing: 3,
+    tip: "Serve in small ramekins. Label unfamiliar ones for guests.",
   },
   pickles: {
-    unit: "oz",
-    appetizer: 0.75,
-    main:       1.5,
-    grazing:    2,
+    unit: "oz", appetizer: 0.75, main: 1.5, grazing: 2,
     tip: "Drain well before plating. Pickled turnips add striking color.",
   },
-  extras: {
-    unit: "tbsp",
-    appetizer: 0.5,
-    main:       1,
-    grazing:    2,
-    tip: "Honey and jams go near cheese. Za'atar and sumac go near bread and labneh.",
-  },
   vegetables: {
-    unit: "oz",
-    appetizer: 1.5,
-    main:       3,
-    grazing:    4,
-    tip: "Keep raw veg cold until serving. Use as visual color breaks on the board. Serve near dips.",
+    unit: "oz", appetizer: 1.5, main: 3, grazing: 4,
+    tip: "Keep raw veg cold until serving. Use as color breaks near dips.",
+  },
+  extras: {
+    unit: "tbsp", appetizer: 0.5, main: 1, grazing: 2,
+    tip: "Honey and jams go near cheese. Za'atar and sumac go near bread and labneh.",
   },
 };
 
-// ============================================================
-// BOARD SUPPLIES CHECKLIST
-// Printed on the shopping list — not food items
-// ============================================================
 const BOARD_SUPPLIES = [
-  { item: "Wooden or slate serving board",    note: "Large enough for your board size" },
-  { item: "Small ramekins or bowls (3-5)",    note: "For dips, spreads, honey, olives" },
-  { item: "Cheese knives (2-3)",              note: "One per soft cheese, one for hard" },
-  { item: "Small spreaders (2-3)",            note: "For labneh, hummus, butter" },
-  { item: "Cocktail picks or toothpicks",     note: "For meats, olives, and small bites" },
-  { item: "Small serving spoons",             note: "For dips and loose items like nuts" },
-  { item: "Parchment or wax paper",           note: "For lining the board (optional)" },
-  { item: "Labels or small cards",            note: "Name unfamiliar items for guests" },
+  { item: "Wooden or slate serving board",  note: "Large enough for your board size" },
+  { item: "Small ramekins or bowls (3–5)",  note: "For dips, spreads, honey, olives" },
+  { item: "Cheese knives (2–3)",            note: "One per soft cheese, one for hard" },
+  { item: "Small spreaders (2–3)",          note: "For labneh, hummus, butter" },
+  { item: "Cocktail picks or toothpicks",   note: "For meats, olives, and small bites" },
+  { item: "Small serving spoons",           note: "For dips and loose items like nuts" },
+  { item: "Parchment or wax paper",         note: "For lining the board (optional)" },
+  { item: "Labels or small cards",          note: "Name unfamiliar items for guests" },
+];
+
+const PRESENTATION_ITEMS = [
+  { name: "Edible flowers",            note: "Buy when you find them — rare but beautiful. Scatter lightly.", store: ["CM"] },
+  { name: "Fresh rosemary sprigs",     note: "Use as natural dividers between sections on the board.", store: ["CM"] },
+  { name: "Fresh thyme sprigs",        note: "Tuck around cheeses and meats for color and aroma.", store: ["CM"] },
+  { name: "Fresh sage leaves",         note: "Deep green contrast against lighter cheeses.", store: ["CM"] },
+  { name: "Micro greens",              note: "Nest under soft cheeses or use as a bed for small items.", store: ["CM"] },
+  { name: "Dried citrus wheel slices", note: "Visual accent — dried orange or lemon slices add warm color.", store: ["CM", "AG"] },
+  { name: "Small honeycomb piece",     note: "Place near aged cheeses — striking visual and flavor anchor.", store: ["CM"] },
+  { name: "Whole figs (uncut)",        note: "Use for height and visual drama alongside sliced figs.", store: ["CM", "SM"] },
+  { name: "Whole Medjool dates",       note: "Group in clusters for a rich visual anchor on Middle Eastern boards.", store: ["SM", "AG"] },
 ];
 
 // ============================================================
-// HELPER: Calculate per-item quantity given headcount, meal role,
-// category, and how many items are selected in that category.
-// Returns { imperial: "3 oz", metric: "85 g" } or { imperial: "12 pieces", metric: null }
-// ============================================================
-function calcServing(category, mealRole, headCount, itemCount) {
-  const g = SERVING_GUIDANCE[category];
-  if (!g || itemCount === 0) return null;
-
-  const totalPerPerson = g[mealRole];
-  const total = totalPerPerson * headCount;
-  const perItem = total / itemCount;
-  const unit = g.unit;
-
-  let imperial, metric;
-
-  if (unit === "pieces") {
-    const count = Math.max(1, Math.round(perItem));
-    imperial = count + " " + (count === 1 ? "piece" : "pieces");
-    metric = null;
-
-  } else if (unit === "tbsp") {
-    // 1 tbsp = 14.787 ml
-    const roundedTbsp = Math.round(perItem * 2) / 2;
-    if (roundedTbsp >= 16) {
-      const cups = Math.round((roundedTbsp / 16) * 4) / 4;
-      imperial = cups + (cups === 1 ? " cup" : " cups");
-    } else {
-      imperial = roundedTbsp + " tbsp";
-    }
-    const ml = Math.round(perItem * 14.787);
-    if (ml >= 1000) {
-      metric = (Math.round((ml / 1000) * 10) / 10) + " L";
-    } else {
-      metric = (Math.round(ml / 5) * 5) + " ml";
-    }
-
-  } else {
-    // oz — 1 oz = 28.3495 g
-    const roundedOz = Math.round(perItem * 2) / 2;
-    if (roundedOz >= 16) {
-      const lb = Math.round((roundedOz / 16) * 4) / 4;
-      imperial = lb + (lb === 1 ? " lb" : " lbs");
-    } else {
-      imperial = roundedOz + " oz";
-    }
-    const grams = Math.round(perItem * 28.3495);
-    if (grams >= 1000) {
-      metric = (Math.round((grams / 1000) * 10) / 10) + " kg";
-    } else {
-      metric = (Math.round(grams / 5) * 5) + " g";
-    }
-  }
-
-  return { imperial, metric };
-}
-
-// ============================================================
 // ITEMS
-// Each item: { name, store[], themes[], category, note? }
-// store: "CM" | "SM" | "AG"
-// All items are pork-free by design.
+// p: "C" | "S" | "E" — board profile
 // ============================================================
 
 const ITEMS = {
 
-  // ----------------------------------------------------------
   meats: [
-    // American
-    { name: "Smoked turkey breast",           store: ["CM"],            themes: ["american"] },
-    { name: "Roast beef, thinly sliced",      store: ["CM"],            themes: ["american"] },
-    { name: "Smoked chicken breast",          store: ["CM"],            themes: ["american"] },
-    { name: "Corned beef",                    store: ["CM"],            themes: ["american"] },
-
-    // Latin
-    { name: "Beef chorizo",                   store: ["CM"],            themes: ["latin", "spanish"] },
-    { name: "Cured beef longaniza",           store: ["CM"],            themes: ["latin"] },
-
-    // Italian / Mediterranean
-    { name: "Beef bresaola",                  store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Turkey mortadella",              store: ["CM", "SM"],      themes: ["italian", "mediterranean"] },
-    { name: "Beef salami",                    store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Halal beef pepperoni",           store: ["CM", "SM"],      themes: ["italian", "mediterranean"] },
-
-    // Spanish
-    { name: "Lomo embuchado (beef)",          store: ["CM"],            themes: ["spanish", "mediterranean"] },
-
-    // Turkish
-    { name: "Sucuk (beef sausage)",           store: ["AG", "SM"],      themes: ["turkish", "middleeastern"] },
-    { name: "Turkish pastırma",               store: ["AG"],            themes: ["turkish", "middleeastern"] },
-    { name: "Halal beef sujuk, sliced",       store: ["SM", "AG"],      themes: ["turkish", "middleeastern", "levantine"] },
-
-    // Middle Eastern / Levantine
-    { name: "Smoked beef basturma",           store: ["SM", "AG"],      themes: ["middleeastern", "levantine", "persian", "turkish"] },
-
-    // Persian
-
-    // North African
-
-    // French
-    { name: "Duck rillettes",                 store: ["CM"],            themes: ["french"] },
-    { name: "Smoked duck breast",             store: ["CM"],            themes: ["french", "mediterranean"] },
-    { name: "Chicken liver mousse",           store: ["CM"],            themes: ["french"] },
-
-    // Greek
+    // Classic — Levantine American everyday
+    { name: "Smoked turkey breast",                          store: ["CM"],            themes: ["american","middleeastern","levantine"],                                          p: "C" },
+    { name: "Roast beef, thinly sliced",                     store: ["CM"],            themes: ["american","middleeastern","levantine"],                                          p: "C" },
+    { name: "Smoked chicken breast",                         store: ["CM"],            themes: ["american","middleeastern","levantine"],                                          p: "C" },
+    { name: "Corned beef",                                   store: ["CM"],            themes: ["american","middleeastern","levantine"],                                          p: "C" },
+    { name: "Beef mortadella, sliced",                       store: ["CM","SM","AG"],  themes: ["levantine","middleeastern","turkish","northafrican","persian","italian","mediterranean"], p: "C" },
+    { name: "Poultry mortadella, sliced",                    store: ["SM","AG"],       themes: ["levantine","middleeastern","turkish","northafrican","persian"],                   p: "C" },
+    { name: "Beef bologna, sliced",                          store: ["CM","SM","AG"],  themes: ["levantine","middleeastern","turkish","american"],                                p: "C" },
+    { name: "Beef pastrami, sliced",                         store: ["CM","SM","AG"],  themes: ["levantine","middleeastern","american"],                                          p: "C" },
+    { name: "Beef sujuk, dry-cured, sliced",                 store: ["SM","AG"],       themes: ["turkish","middleeastern","levantine"],                                           p: "C" },
+    // Standard
+    { name: "Beef salami",                                   store: ["CM","SM","AG"],  themes: ["italian","mediterranean","levantine","middleeastern"],                           p: "S" },
+    { name: "Beef pepperoni",                                store: ["CM","SM"],       themes: ["italian","mediterranean","american"],                                            p: "S" },
+    { name: "Beef basturma, sliced",                         store: ["SM","AG"],       themes: ["turkish","middleeastern","levantine","persian"],                                 p: "S" },
+    { name: "Beef bresaola (Italian air-dried beef)",        store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    // Explorer
+    { name: "Smoked duck breast",                            store: ["CM"],            themes: ["french","mediterranean"],                                                        p: "E" },
+    { name: "Duck rillettes (French shredded duck confit)",  store: ["CM"],            themes: ["french"],                                                                        p: "E" },
+    { name: "Chicken liver mousse",                          store: ["CM"],            themes: ["french"],                                                                        p: "E" },
   ],
 
-  // ----------------------------------------------------------
   cheeses: [
-    // American
-    { name: "Aged white cheddar",             store: ["CM"],            themes: ["american"] },
-    { name: "Smoked gouda",                   store: ["CM"],            themes: ["american", "mediterranean"] },
-    { name: "Pepper jack",                    store: ["CM"],            themes: ["american", "latin"] },
-    { name: "Colby jack",                     store: ["CM"],            themes: ["american"] },
-    { name: "Cream cheese block",             store: ["CM"],            themes: ["american"] },
-
-    // French
-    { name: "Brie de Meaux",                  store: ["CM"],            themes: ["french", "mediterranean"] },
-    { name: "Camembert",                      store: ["CM"],            themes: ["french"] },
-    { name: "Comté",                          store: ["CM"],            themes: ["french"] },
-    { name: "Époisses",                       store: ["CM"],            themes: ["french"] },
-    { name: "Chèvre (fresh goat cheese)",     store: ["CM", "SM"],      themes: ["french", "mediterranean"] },
-    { name: "Roquefort",                      store: ["CM"],            themes: ["french"] },
-
-    // Italian
-    { name: "Parmigiano Reggiano",            store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Pecorino Romano",                store: ["CM"],            themes: ["italian", "mediterranean", "greek"] },
-    { name: "Burrata",                        store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Taleggio",                       store: ["CM"],            themes: ["italian"] },
-    { name: "Grana Padano",                   store: ["CM"],            themes: ["italian"] },
-    { name: "Asiago",                         store: ["CM"],            themes: ["italian"] },
-
-    // Spanish
-    { name: "Manchego (6-month)",             store: ["CM"],            themes: ["spanish", "mediterranean"] },
-    { name: "Mahón",                          store: ["CM"],            themes: ["spanish"] },
-    { name: "Idiazábal",                      store: ["CM"],            themes: ["spanish"] },
-
-    // Greek
-    { name: "Feta (sheep's milk)",            store: ["CM", "SM"],      themes: ["greek", "mediterranean", "levantine", "middleeastern"] },
-    { name: "Halloumi",                       store: ["CM", "SM"],      themes: ["greek", "levantine", "middleeastern"] },
-    { name: "Kasseri",                        store: ["CM"],            themes: ["greek"] },
-    { name: "Graviera",                       store: ["CM"],            themes: ["greek"] },
-    { name: "Whipped feta",                   store: ["CM", "SM"],      themes: ["greek", "mediterranean", "levantine"] },
-
-    // Turkish
-    { name: "Beyaz peynir (white cheese)",    store: ["AG", "SM"],      themes: ["turkish", "middleeastern"] },
-    { name: "Kaşar peyniri",                  store: ["AG"],            themes: ["turkish"] },
-    { name: "Tulum peyniri",                  store: ["AG"],            themes: ["turkish"] },
-
-    // Middle Eastern / Levantine
-    { name: "Labneh (strained yogurt)",       store: ["SM", "AG"],      themes: ["middleeastern", "levantine", "persian", "northafrican"] },
-    { name: "Akkawi cheese",                  store: ["SM"],            themes: ["levantine", "middleeastern"] },
-    { name: "Nabulsi cheese",                 store: ["SM"],            themes: ["levantine"] },
-
-    // Persian
-    { name: "Lighvan cheese",                 store: ["SM"],            themes: ["persian", "middleeastern"] },
-    { name: "Panir (fresh)",                  store: ["SM"],            themes: ["persian"] },
-
-    // Latin
-    { name: "Queso fresco",                   store: ["CM"],            themes: ["latin"] },
-    { name: "Cotija, aged",                   store: ["CM"],            themes: ["latin"] },
-    { name: "Oaxacan string cheese",          store: ["CM"],            themes: ["latin"] },
+    // Classic
+    { name: "Aged white cheddar",                            store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Pepper jack",                                   store: ["CM"],            themes: ["american","latin"],                                                              p: "C" },
+    { name: "Colby jack",                                    store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Cream cheese block",                            store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Feta (sheep's milk)",                           store: ["CM","SM"],       themes: ["greek","mediterranean","levantine","middleeastern"],                             p: "C" },
+    { name: "Labneh (strained yogurt cheese)",               store: ["SM","AG"],       themes: ["middleeastern","levantine","persian","northafrican"],                            p: "C" },
+    { name: "Beyaz peynir (white cheese)",                   store: ["AG","SM"],       themes: ["turkish","middleeastern"],                                                       p: "C" },
+    { name: "Halloumi (Cypriot firm grilling cheese)",       store: ["CM","SM"],       themes: ["greek","levantine","middleeastern"],                                             p: "C" },
+    // Standard
+    { name: "Brie de Meaux",                                 store: ["CM"],            themes: ["french","mediterranean"],                                                        p: "S" },
+    { name: "Camembert",                                     store: ["CM"],            themes: ["french"],                                                                        p: "S" },
+    { name: "Manchego (6-month aged)",                       store: ["CM"],            themes: ["spanish","mediterranean"],                                                       p: "S" },
+    { name: "Parmigiano Reggiano",                           store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Grana Padano",                                  store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Burrata",                                       store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Smoked gouda",                                  store: ["CM"],            themes: ["american","mediterranean"],                                                      p: "S" },
+    { name: "Whipped feta",                                  store: ["CM","SM"],       themes: ["greek","mediterranean","levantine"],                                             p: "S" },
+    { name: "Akkawi (Levantine mild white cheese)",          store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "S" },
+    { name: "Panir (fresh Persian cheese, similar to feta)", store: ["SM"],            themes: ["persian"],                                                                       p: "S" },
+    { name: "Queso fresco",                                  store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    { name: "Chèvre (fresh goat cheese)",                    store: ["CM","SM"],       themes: ["french","mediterranean"],                                                        p: "S" },
+    { name: "Comté (French aged cow's milk)",                store: ["CM"],            themes: ["french"],                                                                        p: "S" },
+    { name: "Roquefort",                                     store: ["CM"],            themes: ["french"],                                                                        p: "S" },
+    { name: "Pecorino Romano",                               store: ["CM"],            themes: ["italian","mediterranean","greek"],                                               p: "S" },
+    { name: "Asiago",                                        store: ["CM"],            themes: ["italian"],                                                                       p: "S" },
+    { name: "Cotija, aged",                                  store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    // Explorer
+    { name: "Taleggio",                                      store: ["CM"],            themes: ["italian"],                                                                       p: "E" },
+    { name: "Époisses (French washed-rind, pungent)",        store: ["CM"],            themes: ["french"],                                                                        p: "E" },
+    { name: "Idiazábal (Spanish smoked sheep's milk)",       store: ["CM"],            themes: ["spanish"],                                                                       p: "E" },
+    { name: "Mahón (Spanish cow's milk, semi-firm)",         store: ["CM"],            themes: ["spanish"],                                                                       p: "E" },
+    { name: "Kasseri (Greek semi-hard sheep's milk)",        store: ["CM"],            themes: ["greek"],                                                                         p: "E" },
+    { name: "Graviera (Greek aged cow's milk, nutty)",       store: ["CM"],            themes: ["greek"],                                                                         p: "E" },
+    { name: "Kaşar peyniri (Turkish semi-hard yellow cheese)", store: ["AG"],          themes: ["turkish"],                                                                       p: "E" },
+    { name: "Tulum peyniri (Turkish aged crumbly white cheese)", store: ["AG"],        themes: ["turkish"],                                                                       p: "E" },
+    { name: "Nabulsi (Palestinian brined white cheese)",     store: ["SM"],            themes: ["levantine"],                                                                     p: "E" },
+    { name: "Lighvan (Persian brined sheep's milk)",         store: ["SM"],            themes: ["persian","middleeastern"],                                                       p: "E" },
+    { name: "Oaxacan string cheese",                         store: ["CM"],            themes: ["latin"],                                                                         p: "E" },
   ],
 
-  // ----------------------------------------------------------
   fruits: [
-    // Fresh — American / French / European
-    { name: "Red & green grapes",             store: ["CM", "SM"],      themes: ["american", "french", "italian", "mediterranean", "spanish", "greek"] },
-    { name: "Sliced strawberries",            store: ["CM", "SM"],      themes: ["american", "french"] },
-    { name: "Sliced Honeycrisp apple",        store: ["CM"],            themes: ["american", "french"] },
-    { name: "Sliced Bosc pear",               store: ["CM"],            themes: ["american", "french", "italian"] },
-    { name: "Blackberries",                   store: ["CM"],            themes: ["american", "french"] },
-    { name: "Blueberries",                    store: ["CM"],            themes: ["american"] },
-    { name: "Fresh figs, halved",             store: ["CM", "SM"],      themes: ["mediterranean", "french", "italian", "greek", "levantine"] },
-    { name: "Pomegranate arils",              store: ["CM", "SM"],      themes: ["persian", "levantine", "middleeastern", "northafrican", "greek"] },
-    { name: "Sliced mango",                   store: ["CM", "SM"],      themes: ["latin"] },
-    { name: "Sliced papaya",                  store: ["CM"],            themes: ["latin"] },
-
-    // Dried fruits
-    { name: "Dried Calimyrna figs",           store: ["CM", "SM"],      themes: ["mediterranean", "turkish", "persian", "levantine"] },
-    { name: "Medjool dates",                  store: ["SM", "AG"],      themes: ["middleeastern", "levantine", "northafrican", "persian", "mediterranean"] },
-    { name: "Dried apricots",                 store: ["CM", "SM", "AG"],themes: ["turkish", "persian", "middleeastern", "mediterranean"] },
-    { name: "Dried sour cherries",            store: ["CM", "AG"],      themes: ["turkish", "persian", "mediterranean"] },
-    { name: "Golden raisins",                 store: ["CM", "AG"],      themes: ["northafrican", "persian", "mediterranean"] },
-    { name: "Dried mandarin slices",          store: ["CM", "AG"],      themes: ["mediterranean", "turkish", "persian", "northafrican"] },
-    { name: "Aloo bokhara (dried Persian plums)", store: ["SM"],        themes: ["persian", "middleeastern"] },
-    { name: "Lavashak (Persian fruit leather)",   store: ["SM"],        themes: ["persian"] },
-    { name: "Dried barberries (zereshk)",     store: ["SM"],            themes: ["persian"] },
-
-    // Pastes / preserved fruit
-    { name: "Membrillo (quince paste)",       store: ["CM"],            themes: ["spanish", "mediterranean", "french"] },
-    { name: "Guava paste slices",             store: ["CM"],            themes: ["latin"] },
+    // Classic
+    { name: "Red & green grapes",                            store: ["CM","SM"],       themes: ["american","french","italian","mediterranean","spanish","greek"],                 p: "C" },
+    { name: "Sliced strawberries",                           store: ["CM","SM"],       themes: ["american","french"],                                                             p: "C" },
+    { name: "Sliced Honeycrisp apple",                       store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Sliced Bosc pear",                              store: ["CM"],            themes: ["american","french","italian"],                                                   p: "C" },
+    { name: "Blackberries",                                  store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Blueberries",                                   store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Medjool dates",                                 store: ["SM","AG"],       themes: ["middleeastern","levantine","northafrican","persian","mediterranean"],            p: "C" },
+    { name: "Dried apricots",                                store: ["CM","SM","AG"],  themes: ["turkish","persian","middleeastern","mediterranean"],                             p: "C" },
+    { name: "Pomegranate arils",                             store: ["CM","SM"],       themes: ["persian","levantine","middleeastern","northafrican","greek"],                   p: "C" },
+    { name: "Sliced mango",                                  store: ["CM","SM"],       themes: ["latin"],                                                                         p: "C" },
+    // Standard
+    { name: "Fresh figs, halved",                            store: ["CM","SM"],       themes: ["mediterranean","french","italian","greek","levantine"],                         p: "S" },
+    { name: "Dried Calimyrna figs",                          store: ["CM","SM"],       themes: ["mediterranean","turkish","persian","levantine"],                                 p: "S" },
+    { name: "Dried sour cherries",                           store: ["CM","AG"],       themes: ["turkish","persian","mediterranean"],                                             p: "S" },
+    { name: "Golden raisins",                                store: ["CM","AG"],       themes: ["northafrican","persian","mediterranean"],                                        p: "S" },
+    { name: "Dried mandarin slices",                         store: ["CM","AG"],       themes: ["mediterranean","turkish","persian","northafrican"],                              p: "S" },
+    { name: "Guava paste slices",                            store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    { name: "Sliced papaya",                                 store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    // Explorer
+    { name: "Aloo bokhara (dried Persian plums)",            store: ["SM"],            themes: ["persian","middleeastern"],                                                       p: "E" },
+    { name: "Lavashak (Persian fruit leather)",              store: ["SM"],            themes: ["persian"],                                                                       p: "E" },
+    { name: "Zereshk (dried barberries)",                    store: ["SM"],            themes: ["persian"],                                                                       p: "E" },
   ],
 
-  // ----------------------------------------------------------
   crackers: [
-    { name: "Water crackers",                 store: ["CM"],            themes: ["american", "french", "italian"] },
-    { name: "Raincoast crisps",               store: ["CM"],            themes: ["american"] },
-    { name: "Prairie Harvest date crisps",    store: ["CM"],            themes: ["american", "mediterranean"] },
-    { name: "Seeded rye crispbread",          store: ["CM"],            themes: ["french", "american"] },
-    { name: "Herb flatbread crackers",        store: ["CM"],            themes: ["mediterranean", "french", "italian"] },
-    { name: "Sesame seed crackers",           store: ["CM", "SM"],      themes: ["mediterranean", "greek", "middleeastern"] },
-    { name: "Multigrain crackers",            store: ["CM"],            themes: ["american", "mediterranean"] },
-    { name: "Olive oil crackers",             store: ["CM"],            themes: ["italian", "spanish", "mediterranean", "greek"] },
-    { name: "Taralli (Italian ring crackers)",store: ["CM"],            themes: ["italian"] },
-    { name: "Paprika-spiced crackers",        store: ["CM"],            themes: ["spanish", "latin"] },
+    // Classic
+    { name: "Water crackers",                                store: ["CM"],            themes: ["american","french","italian"],                                                   p: "C" },
+    { name: "Multigrain crackers",                           store: ["CM"],            themes: ["american","mediterranean"],                                                      p: "C" },
+    { name: "Sesame seed crackers",                          store: ["CM","SM"],       themes: ["mediterranean","greek","middleeastern"],                                         p: "C" },
+    // Standard
+    { name: "Herb flatbread crackers",                       store: ["CM"],            themes: ["mediterranean","french","italian"],                                              p: "S" },
+    { name: "Olive oil crackers",                            store: ["CM"],            themes: ["italian","spanish","mediterranean","greek"],                                     p: "S" },
+    { name: "Raincoast crisps",                              store: ["CM"],            themes: ["american"],                                                                      p: "S" },
+    { name: "Seeded rye crispbread",                         store: ["CM"],            themes: ["french","american"],                                                             p: "S" },
+    // Explorer
+    { name: "Taralli (Italian ring crackers)",               store: ["CM"],            themes: ["italian"],                                                                       p: "E" },
   ],
 
-  // ----------------------------------------------------------
   breads: [
-    { name: "Crostini, toasted",              store: ["CM"],            themes: ["italian", "mediterranean", "french"] },
-    { name: "Sourdough slices, toasted",      store: ["CM"],            themes: ["american", "french"] },
-    { name: "Baguette slices",                store: ["CM"],            themes: ["french", "mediterranean"] },
-    { name: "Focaccia, sliced",               store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Fresh pita bread",               store: ["SM"],            themes: ["middleeastern", "levantine", "greek", "mediterranean"] },
-    { name: "Pita chips",                     store: ["CM", "SM"],      themes: ["greek", "middleeastern", "levantine"] },
-    { name: "Lavash crackers",                store: ["AG", "SM"],      themes: ["turkish", "persian", "levantine", "middleeastern"] },
-    { name: "Sangak bread, sliced",           store: ["SM"],            themes: ["persian"] },
-    { name: "Markook (flatbread)",            store: ["SM"],            themes: ["levantine", "middleeastern"] },
-    { name: "Corn tortilla chips",            store: ["CM"],            themes: ["latin"] },
-    { name: "Tostones (plantain chips)",      store: ["CM"],            themes: ["latin"] },
-    { name: "Pan de cristal",                 store: ["CM"],            themes: ["spanish"] },
-    { name: "Pide (Turkish flatbread)",       store: ["AG"],            themes: ["turkish"] },
-    { name: "Barbari bread, sliced",          store: ["SM"],            themes: ["persian"] },
+    // Classic
+    { name: "Fresh pita bread",                              store: ["SM"],            themes: ["middleeastern","levantine","greek","mediterranean"],                             p: "C" },
+    { name: "Pita chips",                                    store: ["CM","SM"],       themes: ["greek","middleeastern","levantine"],                                             p: "C" },
+    { name: "Sourdough slices, toasted",                     store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Corn tortilla chips",                           store: ["CM"],            themes: ["latin"],                                                                         p: "C" },
+    // Standard
+    { name: "Baguette slices",                               store: ["CM"],            themes: ["french","mediterranean"],                                                        p: "S" },
+    { name: "Crostini, toasted",                             store: ["CM"],            themes: ["italian","mediterranean","french"],                                              p: "S" },
+    { name: "Focaccia, sliced",                              store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Lavash (Armenian/Persian thin flatbread)",      store: ["AG","SM"],       themes: ["turkish","persian","levantine","middleeastern"],                                 p: "S" },
+    { name: "Pide (Turkish flatbread)",                      store: ["AG"],            themes: ["turkish"],                                                                       p: "S" },
+    // Explorer
+    { name: "Barbari (Persian sesame-topped flatbread)",     store: ["SM"],            themes: ["persian"],                                                                       p: "E" },
+    { name: "Sangak (Persian stone-baked flatbread)",        store: ["SM"],            themes: ["persian"],                                                                       p: "E" },
+    { name: "Markook (Levantine paper-thin flatbread)",      store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "E" },
   ],
 
-  // ----------------------------------------------------------
   nuts: [
-    { name: "Marcona almonds",                store: ["CM"],            themes: ["spanish", "mediterranean"] },
-    { name: "Candied walnuts",                store: ["CM"],            themes: ["american", "french"] },
-    { name: "Spiced pecans",                  store: ["CM"],            themes: ["american"] },
-    { name: "Pistachios, roasted",            store: ["CM", "SM", "AG"],themes: ["persian", "middleeastern", "levantine", "mediterranean"] },
-    { name: "Pine nuts, toasted",             store: ["CM", "SM"],      themes: ["mediterranean", "italian", "levantine", "middleeastern"] },
-    { name: "Turkish hazelnuts",              store: ["AG"],            themes: ["turkish", "mediterranean"] },
-    { name: "Roasted chickpeas",              store: ["SM", "AG"],      themes: ["middleeastern", "levantine", "northafrican", "mediterranean"] },
-    { name: "Spiced almonds",                 store: ["CM", "SM"],      themes: ["northafrican", "spanish", "mediterranean"] },
-    { name: "Walnuts with honey",             store: ["CM", "SM"],      themes: ["greek", "persian", "mediterranean"] },
-    { name: "Mixed nuts, za'atar spiced",     store: ["SM"],            themes: ["levantine", "middleeastern"] },
-    { name: "Pepitas (pumpkin seeds)",        store: ["CM"],            themes: ["latin"] },
-    { name: "Cajun spiced cashews",           store: ["CM"],            themes: ["american"] },
-    { name: "Roasted cashews",                store: ["CM", "SM", "AG"],themes: ["persian", "middleeastern", "mediterranean"] },
-    { name: "Tokhme (roasted watermelon seeds)", store: ["SM", "AG"],  themes: ["persian", "middleeastern"] },
-    { name: "Tokhme kadoo (roasted pumpkin seeds)", store: ["SM", "AG"], themes: ["persian", "middleeastern"] },
+    // Classic
+    { name: "Pistachios, roasted",                           store: ["CM","SM","AG"],  themes: ["persian","middleeastern","levantine","mediterranean"],                           p: "C" },
+    { name: "Roasted cashews",                               store: ["CM","SM","AG"],  themes: ["persian","middleeastern","mediterranean"],                                       p: "C" },
+    { name: "Spiced pecans",                                 store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Candied walnuts",                               store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Roasted chickpeas",                             store: ["SM","AG"],       themes: ["middleeastern","levantine","northafrican","mediterranean"],                      p: "C" },
+    { name: "Walnuts with honey",                            store: ["CM","SM"],       themes: ["greek","persian","mediterranean"],                                               p: "C" },
+    // Standard
+    { name: "Marcona almonds",                               store: ["CM"],            themes: ["spanish","mediterranean"],                                                       p: "S" },
+    { name: "Spiced almonds",                                store: ["CM","SM"],       themes: ["northafrican","spanish","mediterranean"],                                        p: "S" },
+    { name: "Pine nuts, toasted",                            store: ["CM","SM"],       themes: ["mediterranean","italian","levantine","middleeastern"],                           p: "S" },
+    { name: "Pepitas (pumpkin seeds)",                       store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    { name: "Cajun spiced cashews",                          store: ["CM"],            themes: ["american"],                                                                      p: "S" },
+    { name: "Mixed nuts, za'atar spiced",                    store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "S" },
+    // Explorer
+    { name: "Turkish hazelnuts",                             store: ["AG"],            themes: ["turkish","mediterranean"],                                                       p: "E" },
+    { name: "Tokhme (Persian roasted watermelon seeds)",     store: ["SM","AG"],       themes: ["persian","middleeastern"],                                                       p: "E" },
   ],
 
-  // ----------------------------------------------------------
   spreads: [
-    // American / French
-    { name: "Wildflower honey",               store: ["CM"],            themes: ["american", "french", "mediterranean"] },
-    { name: "Fig jam",                        store: ["CM"],            themes: ["french", "italian", "mediterranean", "spanish"] },
-    { name: "Whole-grain mustard",            store: ["CM"],            themes: ["american", "french"] },
-    { name: "Pepper jelly",                   store: ["CM"],            themes: ["american"] },
-    { name: "Apple butter",                   store: ["CM"],            themes: ["american"] },
-    { name: "Truffle honey",                  store: ["CM"],            themes: ["italian", "french"] },
-    { name: "Apricot preserves",              store: ["CM"],            themes: ["french", "mediterranean"] },
-
-    // Mediterranean / Spanish / Italian
-    { name: "Romesco sauce",                  store: ["CM"],            themes: ["spanish", "mediterranean"] },
-    { name: "Tapenade (olive spread)",        store: ["CM", "SM"],      themes: ["french", "mediterranean", "greek"] },
-    { name: "Sun-dried tomato spread",        store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Pesto",                          store: ["CM"],            themes: ["italian"] },
-    { name: "Quince paste (membrillo)",       store: ["CM"],            themes: ["spanish", "mediterranean"] },
-    { name: "Olive oil + za'atar for dipping",store: ["SM", "AG"],      themes: ["levantine", "middleeastern", "mediterranean", "greek"] },
-
-    // Middle Eastern / Levantine
-    { name: "Hummus",                         store: ["SM", "CM"],      themes: ["middleeastern", "levantine", "greek", "mediterranean"] },
-    { name: "Baba ghanoush",                  store: ["SM"],            themes: ["middleeastern", "levantine", "mediterranean"] },
-    { name: "Mutabal (tahini + eggplant)",    store: ["SM"],            themes: ["levantine", "middleeastern"] },
-    { name: "Muhammara (red pepper-walnut)",  store: ["SM"],            themes: ["levantine", "middleeastern", "turkish"] },
-    { name: "Labneh with za'atar",            store: ["SM"],            themes: ["levantine", "middleeastern"] },
-    { name: "Toum (garlic cream)",            store: ["SM"],            themes: ["levantine", "middleeastern"] },
-    { name: "Tahini",                         store: ["SM", "AG", "CM"],themes: ["middleeastern", "levantine", "greek", "northafrican", "persian"] },
-    { name: "Pomegranate molasses",           store: ["SM", "AG"],      themes: ["levantine", "middleeastern", "persian", "northafrican"] },
-
-    // Persian / North African
-    { name: "Kashk (fermented whey dip)",     store: ["SM"],            themes: ["persian"] },
-    { name: "Harissa paste",                  store: ["CM", "SM"],      themes: ["northafrican", "mediterranean"] },
-    { name: "Chermoula sauce",                store: ["SM"],            themes: ["northafrican"] },
-    { name: "Date molasses",                  store: ["SM", "AG"],      themes: ["persian", "middleeastern", "northafrican"] },
-    { name: "Mast-o-khiar (yogurt-cucumber)", store: ["SM"],            themes: ["persian", "middleeastern"] },
-
-    // Turkish
-    { name: "Biber salçası (pepper paste)",   store: ["AG"],            themes: ["turkish", "middleeastern"] },
-    { name: "Haydari (yogurt-herb dip)",      store: ["AG", "SM"],      themes: ["turkish"] },
-
-    // Greek
-    { name: "Tzatziki",                       store: ["CM", "SM"],      themes: ["greek", "mediterranean"] },
-    { name: "Skordalia (garlic dip)",         store: ["CM"],            themes: ["greek"] },
-
-    // Latin
-    { name: "Guacamole",                      store: ["CM"],            themes: ["latin"] },
-    { name: "Black bean dip",                 store: ["CM"],            themes: ["latin"] },
-    { name: "Salsa verde",                    store: ["CM"],            themes: ["latin"] },
+    // Classic
+    { name: "Wildflower honey",                              store: ["CM"],            themes: ["american","french","mediterranean"],                                             p: "C" },
+    { name: "Hummus",                                        store: ["SM","CM"],       themes: ["middleeastern","levantine","greek","mediterranean"],                             p: "C" },
+    { name: "Baba ghanoush (smoky eggplant dip)",            store: ["SM"],            themes: ["middleeastern","levantine","mediterranean"],                                     p: "C" },
+    { name: "Labneh with za'atar",                           store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "C" },
+    { name: "Tahini",                                        store: ["SM","AG","CM"],  themes: ["middleeastern","levantine","greek","northafrican","persian"],                    p: "C" },
+    { name: "Guacamole",                                     store: ["CM"],            themes: ["latin"],                                                                         p: "C" },
+    { name: "Whole-grain mustard",                           store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Pepper jelly",                                  store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Apple butter",                                  store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    // Standard
+    { name: "Tzatziki",                                      store: ["CM","SM"],       themes: ["greek","mediterranean"],                                                         p: "S" },
+    { name: "Pesto",                                         store: ["CM"],            themes: ["italian"],                                                                       p: "S" },
+    { name: "Fig jam",                                       store: ["CM"],            themes: ["french","italian","mediterranean","spanish"],                                    p: "S" },
+    { name: "Tapenade (olive spread)",                       store: ["CM","SM"],       themes: ["french","mediterranean","greek"],                                                p: "S" },
+    { name: "Harissa (North African chili paste)",           store: ["CM","SM"],       themes: ["northafrican","mediterranean"],                                                  p: "S" },
+    { name: "Muhammara (red pepper-walnut dip)",             store: ["SM"],            themes: ["levantine","middleeastern","turkish"],                                           p: "S" },
+    { name: "Toum (garlic cream)",                           store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "S" },
+    { name: "Pomegranate molasses",                          store: ["SM","AG"],       themes: ["levantine","middleeastern","persian","northafrican"],                            p: "S" },
+    { name: "Mast-o-khiar (yogurt-cucumber dip)",            store: ["SM"],            themes: ["persian","middleeastern"],                                                       p: "S" },
+    { name: "Truffle honey",                                 store: ["CM"],            themes: ["italian","french"],                                                              p: "S" },
+    { name: "Apricot preserves",                             store: ["CM"],            themes: ["french","mediterranean"],                                                        p: "S" },
+    { name: "Sun-dried tomato spread",                       store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Membrillo (quince paste)",                      store: ["CM"],            themes: ["spanish","mediterranean"],                                                       p: "S" },
+    { name: "Mutabal (smoky eggplant & tahini dip)",         store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "S" },
+    { name: "Salsa verde",                                   store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    { name: "Olive oil + za'atar for dipping",               store: ["SM","AG"],       themes: ["levantine","middleeastern","mediterranean","greek"],                             p: "S" },
+    { name: "Date molasses",                                 store: ["SM","AG"],       themes: ["persian","middleeastern","northafrican"],                                        p: "S" },
+    // Explorer
+    { name: "Romesco (Spanish roasted red pepper & almond sauce)", store: ["CM"],      themes: ["spanish","mediterranean"],                                                       p: "E" },
+    { name: "Haydari (yogurt-herb dip)",                     store: ["AG","SM"],       themes: ["turkish"],                                                                       p: "E" },
+    { name: "Biber salçası (pepper paste)",                  store: ["AG"],            themes: ["turkish","middleeastern"],                                                       p: "E" },
+    { name: "Kashk (fermented whey dip)",                    store: ["SM"],            themes: ["persian"],                                                                       p: "E" },
+    { name: "Chermoula (North African herb & spice sauce)",  store: ["SM"],            themes: ["northafrican"],                                                                  p: "E" },
+    { name: "Skordalia (garlic dip)",                        store: ["CM"],            themes: ["greek"],                                                                         p: "E" },
   ],
 
-  // ----------------------------------------------------------
-  // Pickles: brined, marinated, oil-cured, and preserved items
-  // includes olives, marinated vegetables, and roasted/preserved veg
-  // ----------------------------------------------------------
   pickles: [
-    // Western / American / French
-    { name: "Cornichons",                     store: ["CM"],            themes: ["french", "american"] },
-    { name: "Bread & butter pickles",         store: ["CM"],            themes: ["american"] },
-    { name: "Pickled jalapeños",              store: ["CM"],            themes: ["latin", "american"] },
-    { name: "Peppadew peppers",               store: ["CM"],            themes: ["mediterranean", "american"] },
-    { name: "Pickled banana peppers",         store: ["CM"],            themes: ["italian", "american"] },
-
-    // Olives
-    { name: "Castelvetrano olives",           store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Kalamata olives",                store: ["CM", "SM"],      themes: ["greek", "mediterranean"] },
-    { name: "Cerignola olives",               store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Mixed marinated olives",         store: ["CM", "SM"],      themes: ["mediterranean", "spanish", "french"] },
-    { name: "Manzanilla olives, stuffed",     store: ["CM"],            themes: ["spanish"] },
-
-    // Marinated / roasted vegetables (moved from extras)
-    { name: "Marinated artichoke hearts",     store: ["CM"],            themes: ["italian", "mediterranean", "greek"] },
-    { name: "Roasted red peppers",            store: ["CM"],            themes: ["mediterranean", "spanish", "italian"] },
-    { name: "Sun-dried tomatoes in oil",      store: ["CM"],            themes: ["italian", "mediterranean"] },
-    { name: "Marinated mushrooms",            store: ["CM"],            themes: ["italian", "french", "mediterranean"] },
-
-    // Middle Eastern / Levantine / Turkish
-    { name: "Turşu (Turkish pickled veg)",    store: ["AG"],            themes: ["turkish", "middleeastern"] },
-    { name: "Pickled turnips (pink)",         store: ["SM", "AG"],      themes: ["levantine", "middleeastern", "turkish"] },
-    { name: "Pickled grape leaves",           store: ["SM", "AG"],      themes: ["greek", "turkish", "levantine"] },
-    { name: "Pickled cucumbers (Middle Eastern)", store: ["SM"],        themes: ["levantine", "middleeastern"] },
-    { name: "Pickled garlic",                 store: ["SM", "AG", "CM"],themes: ["middleeastern", "levantine", "persian", "mediterranean"] },
-
-    // Persian / North African
-    { name: "Preserved lemons",               store: ["SM", "CM"],      themes: ["northafrican", "persian", "mediterranean"] },
-    { name: "Torshi (Persian mixed pickles)", store: ["SM"],            themes: ["persian"] },
+    // Classic
+    { name: "Kalamata olives",                               store: ["CM","SM"],       themes: ["greek","mediterranean"],                                                         p: "C" },
+    { name: "Mixed marinated olives",                        store: ["CM","SM"],       themes: ["mediterranean","spanish","french"],                                              p: "C" },
+    { name: "Pickled jalapeños",                             store: ["CM"],            themes: ["latin","american"],                                                              p: "C" },
+    { name: "Bread & butter pickles",                        store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Pickled turnips (pink)",                        store: ["SM","AG"],       themes: ["levantine","middleeastern","turkish"],                                           p: "C" },
+    { name: "Pickled cucumbers, Middle Eastern style",       store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "C" },
+    { name: "Pickled garlic",                                store: ["SM","AG","CM"],  themes: ["middleeastern","levantine","persian","mediterranean"],                           p: "C" },
+    // Standard
+    { name: "Castelvetrano olives (Sicilian mild green)",    store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Cerignola olives (Southern Italian large)",     store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Manzanilla olives, stuffed",                    store: ["CM"],            themes: ["spanish"],                                                                       p: "S" },
+    { name: "Cornichons (French tiny pickled gherkins)",     store: ["CM"],            themes: ["french","american"],                                                             p: "S" },
+    { name: "Marinated artichoke hearts",                    store: ["CM"],            themes: ["italian","mediterranean","greek"],                                               p: "S" },
+    { name: "Roasted red peppers",                           store: ["CM"],            themes: ["mediterranean","spanish","italian"],                                             p: "S" },
+    { name: "Sun-dried tomatoes in oil",                     store: ["CM"],            themes: ["italian","mediterranean"],                                                       p: "S" },
+    { name: "Pickled banana peppers",                        store: ["CM"],            themes: ["italian","american"],                                                            p: "S" },
+    { name: "Peppadew peppers (South African sweet-hot)",    store: ["CM"],            themes: ["mediterranean","american"],                                                      p: "S" },
+    { name: "Preserved lemons",                              store: ["SM","CM"],       themes: ["northafrican","persian","mediterranean"],                                        p: "S" },
+    { name: "Pickled grape leaves",                          store: ["SM","AG"],       themes: ["greek","turkish","levantine"],                                                   p: "S" },
+    // Explorer
+    { name: "Turşu (Turkish mixed pickled vegetables)",      store: ["AG"],            themes: ["turkish","middleeastern"],                                                       p: "E" },
+    { name: "Marinated mushrooms",                           store: ["CM"],            themes: ["italian","french","mediterranean"],                                              p: "E" },
+    { name: "Torshi (Persian mixed pickles)",                store: ["SM"],            themes: ["persian"],                                                                       p: "E" },
   ],
 
-  // ----------------------------------------------------------
-  // Vegetables: fresh and raw only (crudités)
-  // Marinated / roasted veg live in Pickles
-  // ----------------------------------------------------------
   vegetables: [
-    { name: "Persian cucumbers, sliced",      store: ["CM", "SM"],      themes: ["persian", "levantine", "middleeastern", "greek", "mediterranean"] },
-    { name: "Cherry tomatoes",                store: ["CM", "SM"],      themes: ["italian", "mediterranean", "greek", "levantine"] },
-    { name: "Radishes, trimmed",              store: ["CM", "SM"],      themes: ["french", "persian", "levantine", "middleeastern", "mediterranean"] },
-    { name: "Carrot sticks",                  store: ["CM", "SM"],      themes: ["american", "french", "mediterranean"] },
-    { name: "Celery sticks",                  store: ["CM"],            themes: ["american", "french"] },
-    { name: "Bell pepper strips",             store: ["CM", "SM"],      themes: ["american", "latin", "mediterranean"] },
-    { name: "Snap peas",                      store: ["CM"],            themes: ["american", "french"] },
-    { name: "Cucumber spears",                store: ["CM"],            themes: ["american", "greek", "mediterranean"] },
-    { name: "Endive leaves",                  store: ["CM"],            themes: ["french", "italian"] },
-    { name: "Broccoli florets",               store: ["CM"],            themes: ["american", "italian"] },
-    { name: "Cauliflower florets",            store: ["CM"],            themes: ["american", "mediterranean", "levantine"] },
-    { name: "Green onions / scallions",       store: ["CM", "SM"],      themes: ["persian", "levantine", "middleeastern", "american"] },
-    { name: "Fresh mint sprigs",              store: ["CM", "SM"],      themes: ["persian", "levantine", "middleeastern", "greek", "northafrican"] },
-    { name: "Fresh tarragon",                 store: ["CM", "SM"],      themes: ["persian", "french"] },
-    { name: "Fresh basil leaves",             store: ["CM"],            themes: ["italian", "mediterranean", "persian"] },
-    { name: "Fresh dill",                     store: ["CM", "SM"],      themes: ["persian", "greek", "levantine"] },
-    { name: "Sliced radishes with butter",    store: ["CM"],            themes: ["french"] },
+    // Classic — all raw crudités, mostly everyday
+    { name: "Cherry tomatoes",                               store: ["CM","SM"],       themes: ["italian","mediterranean","greek","levantine"],                                   p: "C" },
+    { name: "Carrot sticks",                                 store: ["CM","SM"],       themes: ["american","french","mediterranean"],                                             p: "C" },
+    { name: "Celery sticks",                                 store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Cucumber spears",                               store: ["CM"],            themes: ["american","greek","mediterranean"],                                              p: "C" },
+    { name: "Bell pepper strips",                            store: ["CM","SM"],       themes: ["american","latin","mediterranean"],                                              p: "C" },
+    { name: "Persian cucumbers, sliced",                     store: ["CM","SM"],       themes: ["persian","levantine","middleeastern","greek","mediterranean"],                   p: "C" },
+    { name: "Radishes, trimmed",                             store: ["CM","SM"],       themes: ["french","persian","levantine","middleeastern","mediterranean"],                  p: "C" },
+    { name: "Snap peas",                                     store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
+    { name: "Broccoli florets",                              store: ["CM"],            themes: ["american","italian"],                                                            p: "C" },
+    { name: "Cauliflower florets",                           store: ["CM"],            themes: ["american","mediterranean","levantine"],                                          p: "C" },
+    { name: "Green onions / scallions",                      store: ["CM","SM"],       themes: ["persian","levantine","middleeastern","american"],                                p: "C" },
+    { name: "Fresh mint sprigs",                             store: ["CM","SM"],       themes: ["persian","levantine","middleeastern","greek","northafrican"],                    p: "C" },
+    // Standard
+    { name: "Fresh basil leaves",                            store: ["CM"],            themes: ["italian","mediterranean","persian"],                                             p: "S" },
+    { name: "Fresh dill",                                    store: ["CM","SM"],       themes: ["persian","greek","levantine"],                                                   p: "S" },
+    // Explorer
+    { name: "Fresh tarragon",                                store: ["CM","SM"],       themes: ["persian","french"],                                                              p: "E" },
+    { name: "Endive leaves",                                 store: ["CM"],            themes: ["french","italian"],                                                              p: "E" },
   ],
 
-  // ----------------------------------------------------------
   extras: [
-    // American / French
-    { name: "Local Texas wildflower honey",   store: ["CM"],            themes: ["american"] },
-    { name: "Dijon mustard",                  store: ["CM"],            themes: ["french", "american"] },
-    { name: "Dried cranberries",              store: ["CM"],            themes: ["american"] },
-    { name: "Caperberries",                   store: ["CM"],            themes: ["italian", "mediterranean", "spanish"] },
-    { name: "Roasted garlic cloves",          store: ["CM"],            themes: ["italian", "mediterranean", "french"] },
-
-    // Greek / Turkish / Middle Eastern
-    { name: "Za'atar spice blend",            store: ["SM", "AG"],      themes: ["levantine", "middleeastern", "turkish"] },
-    { name: "Sumac",                          store: ["SM", "AG"],      themes: ["levantine", "middleeastern", "persian", "turkish"] },
-    { name: "Grape leaves (dolma, stuffed)",  store: ["SM", "AG"],      themes: ["greek", "turkish", "levantine"] },
-    { name: "Turkish delight (lokum)",        store: ["AG"],            themes: ["turkish"] },
-    { name: "Baklava pieces",                 store: ["SM", "AG"],      themes: ["turkish", "greek", "middleeastern"] },
-    { name: "Sesame halva",                   store: ["SM", "AG"],      themes: ["middleeastern", "levantine", "greek"] },
-
-    // Persian / North African
-    { name: "Saffron honey",                  store: ["SM"],            themes: ["persian", "northafrican", "mediterranean"] },
-    { name: "Rose water candies",             store: ["SM", "AG"],      themes: ["persian", "middleeastern"] },
-    { name: "Ras el hanout spice",            store: ["SM"],            themes: ["northafrican"] },
-
-    // Sabzi khordan — Persian fresh herb platter essentials
-    { name: "Sabzi khordan (Persian herb platter: mint, tarragon, basil, dill, radish, scallion)", store: ["SM"], themes: ["persian"] },
-    { name: "Walnuts with fresh herbs (noon-o-panir style)", store: ["SM"], themes: ["persian"] },
-
-    // Spanish / Latin
-    { name: "Marcona almonds, rosemary",      store: ["CM"],            themes: ["spanish", "mediterranean"] },
-    { name: "Tajín chili-lime powder",        store: ["CM"],            themes: ["latin"] },
-    { name: "Dulce de leche",                 store: ["CM"],            themes: ["latin"] },
-    { name: "Chamoy sauce",                   store: ["CM"],            themes: ["latin"] },
-    { name: "Edible flowers (garnish)",       store: ["CM"],            themes: ["french", "mediterranean", "persian", "american"] },
+    // Classic
+    { name: "Local Texas wildflower honey",                  store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    { name: "Za'atar (Middle Eastern herb & sesame blend)",  store: ["SM","AG"],       themes: ["levantine","middleeastern","turkish"],                                           p: "C" },
+    { name: "Sumac (tart red berry spice, lemony flavor)",   store: ["SM","AG"],       themes: ["levantine","middleeastern","persian","turkish"],                                 p: "C" },
+    { name: "Dolma (grape leaves stuffed with rice & herbs)",store: ["SM","AG"],       themes: ["greek","turkish","levantine"],                                                   p: "C" },
+    { name: "Baklava pieces",                                store: ["SM","AG"],       themes: ["turkish","greek","middleeastern"],                                               p: "C" },
+    { name: "Dried cranberries",                             store: ["CM"],            themes: ["american"],                                                                      p: "C" },
+    // Standard
+    { name: "Roasted garlic cloves",                         store: ["CM"],            themes: ["italian","mediterranean","french"],                                              p: "S" },
+    { name: "Caperberries (large Mediterranean caper buds)", store: ["CM"],            themes: ["italian","mediterranean","spanish"],                                             p: "S" },
+    { name: "Sesame halva (Middle Eastern sesame candy)",    store: ["SM","AG"],       themes: ["middleeastern","levantine","greek"],                                             p: "S" },
+    { name: "Lokum (Turkish delight)",                       store: ["AG"],            themes: ["turkish"],                                                                       p: "S" },
+    { name: "Marcona almonds, rosemary",                     store: ["CM"],            themes: ["spanish","mediterranean"],                                                       p: "S" },
+    { name: "Dulce de leche (Latin caramel milk spread)",    store: ["CM"],            themes: ["latin"],                                                                         p: "S" },
+    // Explorer
+    { name: "Saffron honey",                                 store: ["SM"],            themes: ["persian","northafrican","mediterranean"],                                        p: "E" },
+    { name: "Rose water candies",                            store: ["SM","AG"],       themes: ["persian","middleeastern"],                                                       p: "E" },
   ],
 };
 
 // ============================================================
-// HELPER: Check if two themes clash
+// HELPERS
 // ============================================================
+
 function themesClash(selectedThemeIds) {
   const clashes = [];
   for (const [a, b] of THEME_CLASHES) {
@@ -570,36 +410,55 @@ function themesClash(selectedThemeIds) {
       clashes.push(`${labelA} + ${labelB}`);
     }
   }
-  return clashes; // empty array = no clashes
+  return clashes;
 }
 
-// ============================================================
-// HELPER: Get eligible items for a category given selected themes
-// ============================================================
-function getEligibleItems(category, selectedThemeIds) {
+function getEligibleItems(category, selectedThemeIds, boardProfile) {
+  const allowed = PROFILE_INCLUDES[boardProfile] || ["C","S","E"];
   return ITEMS[category].filter(item =>
-    item.themes.some(t => selectedThemeIds.includes(t))
+    item.themes.some(t => selectedThemeIds.includes(t)) &&
+    allowed.includes(item.p)
   );
 }
 
-// ============================================================
-// HELPER: Pick N random unique items from an array
-// ============================================================
 function pickRandom(arr, n) {
   const shuffled = [...arr].sort(() => Math.random() - 0.5);
   return shuffled.slice(0, n);
 }
 
-// ============================================================
-// HELPER: Roll a full board
-// Returns { category: [items] } or { category: null } if not enough items
-// ============================================================
-function rollBoard(selectedThemeIds, boardSize) {
+function rollBoard(selectedThemeIds, boardSize, boardProfile) {
   const n = BOARD_SIZES[boardSize].itemsPerCategory;
   const result = {};
   for (const category of Object.keys(ITEMS)) {
-    const eligible = getEligibleItems(category, selectedThemeIds);
-    result[category] = eligible.length > 0 ? pickRandom(eligible, Math.min(n, eligible.length)) : [];
+    const eligible = getEligibleItems(category, selectedThemeIds, boardProfile);
+    result[category] = eligible.length > 0
+      ? pickRandom(eligible, Math.min(n, eligible.length))
+      : [];
   }
   return result;
+}
+
+function calcServing(category, mealRole, headCount, itemCount) {
+  const g = SERVING_GUIDANCE[category];
+  if (!g || itemCount === 0) return null;
+  const total = g[mealRole] * headCount;
+  const perItem = total / itemCount;
+  const unit = g.unit;
+  let imperial, metric;
+  if (unit === "pieces") {
+    const count = Math.max(1, Math.round(perItem));
+    imperial = count + (count === 1 ? " piece" : " pieces");
+    metric = null;
+  } else if (unit === "tbsp") {
+    const r = Math.round(perItem * 2) / 2;
+    imperial = r >= 16 ? (Math.round((r/16)*4)/4) + " cup" : r + " tbsp";
+    const ml = Math.round(perItem * 14.787);
+    metric = ml >= 1000 ? (Math.round((ml/1000)*10)/10) + " L" : (Math.round(ml/5)*5) + " ml";
+  } else {
+    const r = Math.round(perItem * 2) / 2;
+    imperial = r >= 16 ? (Math.round((r/16)*4)/4) + (r >= 32 ? " lbs" : " lb") : r + " oz";
+    const g2 = Math.round(perItem * 28.3495);
+    metric = g2 >= 1000 ? (Math.round((g2/1000)*10)/10) + " kg" : (Math.round(g2/5)*5) + " g";
+  }
+  return { imperial, metric };
 }

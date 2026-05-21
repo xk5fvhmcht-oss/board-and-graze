@@ -8,6 +8,7 @@ const state = {
   boardSize:       'M',
   mealRole:        'main',
   headCount:       6,
+  boardProfile:    'classic',
   categoryLimits:  {}, // category → override count (null = use boardSize default)
   currentBoard:    {}, // category → [items]
   excludedItems:   new Set(JSON.parse(localStorage.getItem('excluded') || '[]')),
@@ -132,6 +133,18 @@ function initRoleButtons() {
   });
 }
 
+
+// ── BOARD PROFILE ──
+function initProfileButtons() {
+  document.querySelectorAll('.profile-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      state.boardProfile = btn.dataset.profile;
+    });
+  });
+}
+
 // ── ROLL ──
 $('btn-roll').addEventListener('click', () => {
   rollAndShow();
@@ -151,7 +164,7 @@ function rollAndShow() {
   for (const category of Object.keys(ITEMS)) {
     const n = getCategoryCount(category);
     if (n === 0) { board[category] = []; continue; }
-    const eligible = getEligibleItems(category, state.selectedThemes)
+    const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
       .filter(item => !state.excludedItems.has(item.name));
     board[category] = eligible.length > 0
       ? pickRandom(eligible, Math.min(n, eligible.length))
@@ -169,7 +182,8 @@ function renderBoard() {
 
   // Board meta
   const themes = state.selectedThemes.map(id => THEMES.find(t => t.id === id).label).join(', ');
-  $('board-meta').textContent = `${BOARD_SIZES[state.boardSize].label} · ${MEAL_ROLES[state.mealRole].label} · ${state.headCount} guests`;
+  const profLabel = PROFILES[state.boardProfile].icon + ' ' + PROFILES[state.boardProfile].label;
+  $('board-meta').textContent = `${BOARD_SIZES[state.boardSize].label} · ${MEAL_ROLES[state.mealRole].label} · ${state.headCount} guests · ${profLabel}`;
 
   Object.entries(state.currentBoard).forEach(([category, items]) => {
     const meta = CAT_META[category];
@@ -277,7 +291,7 @@ function buildItemRow(item, category) {
 // ── REROLL SINGLE ITEM ──
 function rerollItem(category, currentName, rowEl) {
   const allItems = state.currentBoard[category].map(i => i.name);
-  const eligible = getEligibleItems(category, state.selectedThemes)
+  const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
     .filter(item => !state.excludedItems.has(item.name) && !allItems.includes(item.name));
 
   if (eligible.length === 0) return; // nothing else to pick
@@ -305,7 +319,7 @@ function hideItem(name, category, rowEl) {
 
   // Replace with a new item if possible
   const allItems = state.currentBoard[category].map(i => i.name);
-  const eligible = getEligibleItems(category, state.selectedThemes)
+  const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
     .filter(item => !state.excludedItems.has(item.name) && !allItems.includes(item.name));
 
   rowEl.style.opacity = '0';
@@ -599,6 +613,7 @@ function resetApp() {
   state.selectedThemes  = [];
   state.boardSize       = 'M';
   state.mealRole        = 'main';
+  state.boardProfile    = 'classic';
   state.categoryLimits  = {};
   state.currentBoard    = {};
 
@@ -610,6 +625,11 @@ function resetApp() {
   // Reset role buttons
   document.querySelectorAll('.role-btn').forEach(b =>
     b.classList.toggle('active', b.dataset.role === 'main')
+  );
+
+  // Reset profile buttons
+  document.querySelectorAll('.profile-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.profile === 'classic')
   );
 
   updateThemeUI();
@@ -624,6 +644,7 @@ function init() {
   initThemeGrid();
   initSizeButtons();
   initRoleButtons();
+  initProfileButtons();
   initSliders();
   $('stepper-val').textContent = state.headCount;
   // Show version in footer

@@ -746,6 +746,50 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
 .cat-card:nth-child(9)  { animation-delay: 0.18s; }
 .cat-card:nth-child(10) { animation-delay: 0.20s; }
 
+
+/* ── PROFILE SELECTOR ── */
+.profile-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-top: 4px;
+}
+.profile-btn {
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--parchment-dk);
+  padding: 14px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s, transform 0.1s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  -webkit-tap-highlight-color: transparent;
+}
+.profile-btn:active { transform: scale(0.96); }
+.profile-btn.active {
+  border-color: var(--rust);
+  background: var(--rust-pale);
+}
+.profile-icon { font-size: 22px; }
+.profile-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.profile-btn.active .profile-label { color: var(--rust); }
+.profile-note {
+  font-size: 10px;
+  color: var(--ink-faint);
+  font-weight: 300;
+  line-height: 1.3;
+  text-align: center;
+}
+
 /* ── PRINT STYLES ── */
 @media print {
   .app-header, .board-actions, .btn-icon, .btn-reroll-item, .btn-hide-item { display: none !important; }

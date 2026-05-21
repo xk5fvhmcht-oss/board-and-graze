@@ -23,7 +23,7 @@
   <header class="app-header">
     <div class="header-inner">
       <h1 class="app-title">Omar's Board <span class="amp">&amp;</span> Graze</h1>
-      <p class="app-sub">Charcuterie randomizer · Dallas</p>
+      <p class="app-sub">Built on a Levantine American palate</p>
     </div>
     <button class="btn-icon" id="btn-reset" aria-label="Reset" title="Reset everything">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
@@ -93,6 +93,29 @@
       </div>
     </section>
 
+
+    <!-- BOARD PROFILE -->
+    <section class="section">
+      <h2 class="section-label">Board personality</h2>
+      <div class="profile-row" id="profile-row">
+        <button class="profile-btn active" data-profile="classic">
+          <span class="profile-icon">🧺</span>
+          <span class="profile-label">Classic</span>
+          <span class="profile-note">Familiar favorites</span>
+        </button>
+        <button class="profile-btn" data-profile="standard">
+          <span class="profile-icon">🌿</span>
+          <span class="profile-label">Curated</span>
+          <span class="profile-note">Elevated, approachable</span>
+        </button>
+        <button class="profile-btn" data-profile="explorer">
+          <span class="profile-icon">🌶️</span>
+          <span class="profile-label">Explorer</span>
+          <span class="profile-note">The full experience</span>
+        </button>
+      </div>
+    </section>
+
     <!-- ROLL BUTTON -->
     <div class="roll-wrap">
       <button class="btn-roll" id="btn-roll" disabled>
@@ -100,6 +123,8 @@
         <span class="roll-hint" id="roll-hint">Select at least one theme</span>
       </button>
     </div>
+
+    <p style="text-align:center;font-size:11px;color:#a8937a;padding:8px 0 4px;font-family:Lato,sans-serif;" id="app-version"></p>
 
   </main>
 </div>
