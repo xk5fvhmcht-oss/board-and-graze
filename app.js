@@ -182,6 +182,18 @@ function renderBoard() {
   const profLabel = PROFILES[state.boardProfile].icon + ' ' + PROFILES[state.boardProfile].label;
   $('board-meta').textContent = `${BOARD_SIZES[state.boardSize].label} · ${MEAL_ROLES[state.mealRole].label} · ${state.headCount} guests · ${profLabel}`;
 
+  // Levantine breakfast line
+  const levantineThemes = ['levantine','middleeastern','turkish','persian','northafrican'];
+  const hasLevantine = state.selectedThemes.some(t => levantineThemes.includes(t));
+  let taglineEl = document.getElementById('board-tagline');
+  if (!taglineEl) {
+    taglineEl = document.createElement('p');
+    taglineEl.id = 'board-tagline';
+    taglineEl.style.cssText = 'text-align:center;font-size:12px;color:#a8937a;font-style:italic;font-family:Playfair Display,Georgia,serif;padding:6px 20px 2px;';
+    $('board-main').parentNode.insertBefore(taglineEl, $('board-main'));
+  }
+  taglineEl.textContent = hasLevantine ? 'In the Levant, this is called breakfast.' : '';
+
   Object.entries(state.currentBoard).forEach(([category, items]) => {
     const meta = CAT_META[category];
     const n = items.length;

@@ -177,6 +177,7 @@ const ITEMS = {
     { name: "Cream cheese block",                            store: ["CM"],            themes: ["american"],                                                                      p: "C" },
     { name: "Feta (sheep's milk)",                           store: ["CM","SM"],       themes: ["greek","mediterranean","levantine","middleeastern"],                             p: "C" },
     { name: "Labneh (strained yogurt cheese)",               store: ["SM","AG"],       themes: ["middleeastern","levantine","persian","northafrican"],                            p: "C" },
+    { name: "Shanklish (aged labneh balls in za'atar & spices)", store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "C" },
     { name: "Beyaz peynir (white cheese)",                   store: ["AG","SM"],       themes: ["turkish","middleeastern"],                                                       p: "C" },
     { name: "Halloumi (Cypriot firm grilling cheese)",       store: ["CM","SM"],       themes: ["greek","levantine","middleeastern"],                                             p: "C" },
     // Standard
@@ -254,6 +255,7 @@ const ITEMS = {
   breads: [
     // Classic
     { name: "Fresh pita bread",                              store: ["SM"],            themes: ["middleeastern","levantine","greek","mediterranean"],                             p: "C" },
+    { name: "Taboon bread (Levantine clay-oven flatbread)",      store: ["SM"],            themes: ["levantine","middleeastern"],                                                     p: "S" },
     { name: "Pita chips",                                    store: ["CM","SM"],       themes: ["greek","middleeastern","levantine"],                                             p: "C" },
     { name: "Sourdough slices, toasted",                     store: ["CM"],            themes: ["american","french"],                                                             p: "C" },
     { name: "Corn tortilla chips",                           store: ["CM"],            themes: ["latin"],                                                                         p: "C" },
