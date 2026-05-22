@@ -844,124 +844,249 @@ function init() {
 init();
 
 // ═══════════════════════════════════════════
-// BOARD LAYOUT GUIDE
+// BOARD LAYOUT GUIDE — v1.4.0
+// Numbers + icons, no item names on diagram
 // ═══════════════════════════════════════════
 
-// Color palette for each category zone on the SVG board
+// Distinct colors per category — no duplicates
 const ZONE_COLORS = {
-  meats:      { fill: '#f5e6d8', stroke: '#d4956a', label: '#8b4513' },
-  cheeses:    { fill: '#fdf5e0', stroke: '#e8c97a', label: '#7a5a0a' },
-  spreads:    { fill: '#e8f0e8', stroke: '#8aab82', label: '#2e5a28' },
-  breads:     { fill: '#f2ede8', stroke: '#c4a882', label: '#6b4c2a' },
-  crackers:   { fill: '#f2ede8', stroke: '#c4a882', label: '#6b4c2a' },
-  fruits:     { fill: '#fce8e8', stroke: '#e8907a', label: '#8b2020' },
-  nuts:       { fill: '#ede8d8', stroke: '#b8a070', label: '#5a4010' },
-  pickles:    { fill: '#e0ece0', stroke: '#70a870', label: '#1a5a1a' },
-  vegetables: { fill: '#e8f5e8', stroke: '#80b880', label: '#1a4a1a' },
-  extras:     { fill: '#f0e8f8', stroke: '#a880c8', label: '#4a1a7a' },
+  meats:      { fill: '#f7ece0', stroke: '#c8784a', label: '#7a3a10' },
+  cheeses:    { fill: '#fdf8e8', stroke: '#d4a830', label: '#7a5a0a' },
+  spreads:    { fill: '#e8f2e8', stroke: '#6a9e6a', label: '#1a4a1a' },
+  breads:     { fill: '#f8f0e4', stroke: '#b89060', label: '#5a3a10' },
+  crackers:   { fill: '#f0ece0', stroke: '#a08858', label: '#4a3008' },
+  fruits:     { fill: '#fde8e8', stroke: '#d07070', label: '#7a1a1a' },
+  nuts:       { fill: '#ede4d0', stroke: '#9a7840', label: '#4a3000' },
+  pickles:    { fill: '#deeede', stroke: '#509050', label: '#1a4a10' },
+  vegetables: { fill: '#e4f4e4', stroke: '#70b870', label: '#1a5a1a' },
+  extras:     { fill: '#f0e8f8', stroke: '#9868c0', label: '#40187a' },
 };
 
-// Zone layout definitions — positions as percentage of board dimensions
-// Each board size has a different layout
-// Zones: { category, x, y, w, h, shape } — x,y,w,h are 0-1 fractions of board
+// Numbered category order — consistent across all layouts
+const CAT_ORDER = ['spreads','meats','cheeses','breads','crackers','fruits','nuts','pickles','vegetables','extras'];
+
+// Layout zones per board size
+// x,y = top-left corner as fraction of board dimensions
+// w,h = width/height as fraction
+// shape: rect | ramekin | organic | scatter
 const LAYOUTS = {
   S: {
-    // Small board — oval, 1 item per category, simple radial layout
-    boardShape: 'oval',
-    boardW: 340, boardH: 220,
+    boardShape: 'oval', boardW: 340, boardH: 220,
     zones: [
-      { cat: 'spreads',    x: 0.42, y: 0.35, r: 0.10, shape: 'ramekin', label: 'Dip' },
-      { cat: 'meats',      x: 0.20, y: 0.30, w: 0.18, h: 0.22, shape: 'rect', label: 'Meat' },
-      { cat: 'cheeses',    x: 0.65, y: 0.28, w: 0.18, h: 0.24, shape: 'rect', label: 'Cheese' },
-      { cat: 'breads',     x: 0.30, y: 0.68, w: 0.38, h: 0.18, shape: 'rect', label: 'Bread' },
-      { cat: 'fruits',     x: 0.70, y: 0.58, w: 0.14, h: 0.28, shape: 'organic', label: 'Fruit' },
-      { cat: 'nuts',       x: 0.14, y: 0.58, w: 0.12, h: 0.20, shape: 'scatter', label: 'Nuts' },
-      { cat: 'pickles',    x: 0.44, y: 0.68, w: 0.12, h: 0.18, shape: 'scatter', label: 'Pickles' },
-      { cat: 'vegetables', x: 0.56, y: 0.20, w: 0.10, h: 0.30, shape: 'rect', label: 'Veg' },
-      { cat: 'extras',     x: 0.30, y: 0.18, w: 0.12, h: 0.14, shape: 'dot', label: 'Extra' },
-      { cat: 'crackers',   x: 0.13, y: 0.25, w: 0.10, h: 0.30, shape: 'rect', label: 'Crackers' },
+      { cat: 'spreads',    shape: 'ramekin', cx: 0.50, cy: 0.42, r: 0.09 },
+      { cat: 'meats',      shape: 'rect',    x: 0.08,  y: 0.20,  w: 0.20, h: 0.30 },
+      { cat: 'cheeses',    shape: 'rect',    x: 0.72,  y: 0.18,  w: 0.20, h: 0.32 },
+      { cat: 'breads',     shape: 'rect',    x: 0.28,  y: 0.68,  w: 0.44, h: 0.20 },
+      { cat: 'crackers',   shape: 'rect',    x: 0.08,  y: 0.58,  w: 0.16, h: 0.22 },
+      { cat: 'fruits',     shape: 'organic', x: 0.74,  y: 0.55,  w: 0.16, h: 0.30 },
+      { cat: 'nuts',       shape: 'scatter', x: 0.74,  y: 0.20,  w: 0.14, h: 0.20 },
+      { cat: 'pickles',    shape: 'scatter', x: 0.08,  y: 0.54,  w: 0.16, h: 0.14 },
+      { cat: 'vegetables', shape: 'rect',    x: 0.32,  y: 0.16,  w: 0.18, h: 0.22 },
+      { cat: 'extras',     shape: 'rect',    x: 0.54,  y: 0.16,  w: 0.14, h: 0.18 },
     ]
   },
   M: {
-    // Medium board — wider oval, 2 items per category
-    boardShape: 'oval',
-    boardW: 380, boardH: 260,
+    boardShape: 'oval', boardW: 380, boardH: 260,
     zones: [
-      { cat: 'spreads',    x: 0.35, y: 0.38, r: 0.09, shape: 'ramekin', label: 'Dip 1' },
-      { cat: 'spreads',    x: 0.58, y: 0.38, r: 0.09, shape: 'ramekin', label: 'Dip 2' },
-      { cat: 'meats',      x: 0.12, y: 0.25, w: 0.20, h: 0.28, shape: 'rect', label: 'Meats' },
-      { cat: 'cheeses',    x: 0.68, y: 0.22, w: 0.20, h: 0.30, shape: 'rect', label: 'Cheeses' },
-      { cat: 'breads',     x: 0.28, y: 0.70, w: 0.44, h: 0.18, shape: 'rect', label: 'Breads' },
-      { cat: 'crackers',   x: 0.10, y: 0.62, w: 0.16, h: 0.22, shape: 'rect', label: 'Crackers' },
-      { cat: 'fruits',     x: 0.74, y: 0.60, w: 0.16, h: 0.28, shape: 'organic', label: 'Fruits' },
-      { cat: 'nuts',       x: 0.13, y: 0.54, w: 0.13, h: 0.16, shape: 'scatter', label: 'Nuts' },
-      { cat: 'pickles',    x: 0.74, y: 0.28, w: 0.14, h: 0.20, shape: 'scatter', label: 'Olives' },
-      { cat: 'vegetables', x: 0.44, y: 0.16, w: 0.14, h: 0.22, shape: 'rect', label: 'Veg' },
-      { cat: 'extras',     x: 0.30, y: 0.20, w: 0.10, h: 0.14, shape: 'dot', label: 'Extras' },
+      { cat: 'spreads',    shape: 'ramekin', cx: 0.36, cy: 0.44, r: 0.085 },
+      { cat: 'spreads',    shape: 'ramekin', cx: 0.62, cy: 0.44, r: 0.085 },
+      { cat: 'meats',      shape: 'rect',    x: 0.06,  y: 0.16,  w: 0.22, h: 0.36 },
+      { cat: 'cheeses',    shape: 'rect',    x: 0.72,  y: 0.14,  w: 0.22, h: 0.38 },
+      { cat: 'breads',     shape: 'rect',    x: 0.24,  y: 0.70,  w: 0.26, h: 0.20 },
+      { cat: 'crackers',   shape: 'rect',    x: 0.52,  y: 0.70,  w: 0.22, h: 0.20 },
+      { cat: 'fruits',     shape: 'organic', x: 0.72,  y: 0.56,  w: 0.18, h: 0.30 },
+      { cat: 'nuts',       shape: 'scatter', x: 0.06,  y: 0.58,  w: 0.16, h: 0.16 },
+      { cat: 'pickles',    shape: 'scatter', x: 0.72,  y: 0.10,  w: 0.18, h: 0.16 },
+      { cat: 'vegetables', shape: 'rect',    x: 0.32,  y: 0.12,  w: 0.22, h: 0.22 },
+      { cat: 'extras',     shape: 'rect',    x: 0.56,  y: 0.12,  w: 0.14, h: 0.18 },
     ]
   },
   L: {
-    // Large board — rectangular, 4 items per category
-    boardShape: 'rect',
-    boardW: 420, boardH: 300,
+    boardShape: 'rect', boardW: 420, boardH: 300,
     zones: [
-      { cat: 'spreads',    x: 0.30, y: 0.36, r: 0.08, shape: 'ramekin', label: 'Dip 1' },
-      { cat: 'spreads',    x: 0.50, y: 0.36, r: 0.08, shape: 'ramekin', label: 'Dip 2' },
-      { cat: 'spreads',    x: 0.70, y: 0.36, r: 0.08, shape: 'ramekin', label: 'Dip 3' },
-      { cat: 'meats',      x: 0.04, y: 0.10, w: 0.24, h: 0.38, shape: 'rect', label: 'Meats' },
-      { cat: 'cheeses',    x: 0.72, y: 0.08, w: 0.24, h: 0.40, shape: 'rect', label: 'Cheeses' },
-      { cat: 'breads',     x: 0.10, y: 0.70, w: 0.35, h: 0.22, shape: 'rect', label: 'Breads' },
-      { cat: 'crackers',   x: 0.55, y: 0.72, w: 0.35, h: 0.20, shape: 'rect', label: 'Crackers' },
-      { cat: 'fruits',     x: 0.30, y: 0.62, w: 0.20, h: 0.26, shape: 'organic', label: 'Fruits' },
-      { cat: 'nuts',       x: 0.04, y: 0.54, w: 0.18, h: 0.14, shape: 'scatter', label: 'Nuts' },
-      { cat: 'pickles',    x: 0.78, y: 0.54, w: 0.18, h: 0.16, shape: 'scatter', label: 'Olives & Pickles' },
-      { cat: 'vegetables', x: 0.36, y: 0.08, w: 0.28, h: 0.22, shape: 'rect', label: 'Vegetables' },
-      { cat: 'extras',     x: 0.04, y: 0.50, w: 0.18, h: 0.08, shape: 'dot', label: 'Extras' },
+      { cat: 'spreads',    shape: 'ramekin', cx: 0.28, cy: 0.42, r: 0.075 },
+      { cat: 'spreads',    shape: 'ramekin', cx: 0.50, cy: 0.42, r: 0.075 },
+      { cat: 'spreads',    shape: 'ramekin', cx: 0.72, cy: 0.42, r: 0.075 },
+      { cat: 'meats',      shape: 'rect',    x: 0.04,  y: 0.08,  w: 0.22, h: 0.44 },
+      { cat: 'cheeses',    shape: 'rect',    x: 0.74,  y: 0.08,  w: 0.22, h: 0.44 },
+      { cat: 'breads',     shape: 'rect',    x: 0.04,  y: 0.66,  w: 0.28, h: 0.26 },
+      { cat: 'crackers',   shape: 'rect',    x: 0.68,  y: 0.66,  w: 0.28, h: 0.26 },
+      { cat: 'fruits',     shape: 'organic', x: 0.34,  y: 0.62,  w: 0.32, h: 0.30 },
+      { cat: 'nuts',       shape: 'scatter', x: 0.04,  y: 0.56,  w: 0.20, h: 0.10 },
+      { cat: 'pickles',    shape: 'scatter', x: 0.76,  y: 0.56,  w: 0.20, h: 0.10 },
+      { cat: 'vegetables', shape: 'rect',    x: 0.28,  y: 0.06,  w: 0.44, h: 0.22 },
+      { cat: 'extras',     shape: 'rect',    x: 0.36,  y: 0.32,  w: 0.28, h: 0.14 },
     ]
   }
 };
 
-// Assembly steps — dynamic based on board content
+// Get zone number for a category (1-based, from CAT_ORDER)
+function zoneNumber(cat) { return CAT_ORDER.indexOf(cat) + 1; }
+
+// Circled number characters ①–⑩
+function circledNum(n) {
+  const nums = ['①','②','③','④','⑤','⑥','⑦','⑧','⑨','⑩'];
+  return nums[n - 1] || String(n);
+}
+
+function drawBoardSVG(layout, board) {
+  const { boardW, boardH, boardShape, zones } = layout;
+  const pad = 22;
+  const svgW = boardW + pad * 2;
+  const svgH = boardH + pad * 2 + (boardShape === 'oval' ? 18 : 0);
+
+  const boardFill = '#f5efe6';
+  const boardStroke = '#c8b090';
+
+  let svg = `<svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" class="layout-board-svg">`;
+
+  svg += `<defs>
+    <filter id="bshadow">
+      <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="rgba(44,31,14,0.18)"/>
+    </filter>
+    <filter id="zshadow">
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(44,31,14,0.12)"/>
+    </filter>
+  </defs>`;
+
+  const bx = pad, by = pad, bw = boardW, bh = boardH;
+
+  // Board background
+  if (boardShape === 'oval') {
+    svg += `<ellipse cx="${bx+bw/2}" cy="${by+bh/2}" rx="${bw/2}" ry="${bh/2}"
+      fill="${boardFill}" stroke="${boardStroke}" stroke-width="3" filter="url(#bshadow)"/>`;
+    // Wood grain
+    for (let i = 1; i < 6; i++) {
+      const gy = by + (bh/6)*i;
+      svg += `<line x1="${bx+30}" y1="${gy}" x2="${bx+bw-30}" y2="${gy}"
+        stroke="${boardStroke}" stroke-width="0.6" opacity="0.25"/>`;
+    }
+    // Handle
+    svg += `<ellipse cx="${bx+bw/2}" cy="${by+bh+14}" rx="22" ry="7"
+      fill="${boardFill}" stroke="${boardStroke}" stroke-width="2"/>`;
+  } else {
+    svg += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="14"
+      fill="${boardFill}" stroke="${boardStroke}" stroke-width="3" filter="url(#bshadow)"/>`;
+    for (let i = 1; i < 7; i++) {
+      const gy = by + (bh/7)*i;
+      svg += `<line x1="${bx+14}" y1="${gy}" x2="${bx+bw-14}" y2="${gy}"
+        stroke="${boardStroke}" stroke-width="0.6" opacity="0.25"/>`;
+    }
+  }
+
+  // Track which categories we've already numbered (spreads can have multiple ramekins)
+  const catNumbered = {};
+
+  zones.forEach(zone => {
+    const col = ZONE_COLORS[zone.cat] || { fill:'#f0ece8', stroke:'#c0b0a0', label:'#6b5540' };
+    const num = zoneNumber(zone.cat);
+    const icon = CAT_META[zone.cat]?.icon || '';
+    const isFirstOfCat = !catNumbered[zone.cat];
+    catNumbered[zone.cat] = true;
+
+    if (zone.shape === 'ramekin') {
+      const cx = pad + zone.cx * boardW;
+      const cy = pad + zone.cy * boardH;
+      const r  = zone.r * Math.min(boardW, boardH);
+      // Outer ring
+      svg += `<circle cx="${cx}" cy="${cy}" r="${r}"
+        fill="${col.fill}" stroke="${col.stroke}" stroke-width="2" filter="url(#zshadow)"/>`;
+      // Inner ring
+      svg += `<circle cx="${cx}" cy="${cy}" r="${r*0.6}"
+        fill="${col.fill}" stroke="${col.stroke}" stroke-width="1" opacity="0.5"/>`;
+      // Number + icon stacked
+      const fontSize = Math.max(10, r * 0.7);
+      svg += `<text x="${cx}" y="${cy - r*0.08}" text-anchor="middle" dominant-baseline="middle"
+        font-family="Lato,sans-serif" font-size="${fontSize}" font-weight="900"
+        fill="${col.label}">${circledNum(num)}</text>`;
+      if (r > 22) {
+        svg += `<text x="${cx}" y="${cy + r*0.48}" text-anchor="middle" dominant-baseline="middle"
+          font-size="${Math.max(8, r*0.55)}">${icon}</text>`;
+      }
+
+    } else {
+      const zx = pad + zone.x * boardW;
+      const zy = pad + zone.y * boardH;
+      const zw = zone.w * boardW;
+      const zh = zone.h * boardH;
+      const cx = zx + zw/2;
+      const cy = zy + zh/2;
+
+      if (zone.shape === 'rect') {
+        svg += `<rect x="${zx}" y="${zy}" width="${zw}" height="${zh}" rx="7"
+          fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.8" filter="url(#zshadow)"/>`;
+      } else if (zone.shape === 'organic') {
+        svg += `<ellipse cx="${cx}" cy="${cy}" rx="${zw/2}" ry="${zh/2}"
+          fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.8" filter="url(#zshadow)"/>`;
+      } else if (zone.shape === 'scatter') {
+        svg += `<rect x="${zx}" y="${zy}" width="${zw}" height="${zh}" rx="8"
+          fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5" stroke-dasharray="4,2"/>`;
+        // Scatter dots
+        [[0.2,0.35],[0.5,0.25],[0.8,0.4],[0.35,0.7],[0.65,0.65]].slice(0,4).forEach(([dx,dy]) => {
+          svg += `<circle cx="${zx+dx*zw}" cy="${zy+dy*zh}" r="2.5"
+            fill="${col.stroke}" opacity="0.6"/>`;
+        });
+      }
+
+      // Number circle badge — top left corner of zone
+      const badgeR = Math.min(zw, zh) * 0.22;
+      const badgeX = zx + badgeR + 4;
+      const badgeY = zy + badgeR + 4;
+      svg += `<circle cx="${badgeX}" cy="${badgeY}" r="${badgeR}"
+        fill="${col.stroke}" opacity="0.9"/>`;
+      svg += `<text x="${badgeX}" y="${badgeY}" text-anchor="middle" dominant-baseline="middle"
+        font-family="Lato,sans-serif" font-size="${Math.max(7, badgeR*1.1)}" font-weight="900"
+        fill="white">${num}</text>`;
+
+      // Icon centered in zone
+      const iconSize = Math.min(zw, zh) * 0.45;
+      if (iconSize >= 10) {
+        svg += `<text x="${cx + badgeR*0.3}" y="${cy + 2}" text-anchor="middle" dominant-baseline="middle"
+          font-size="${Math.max(10, iconSize)}">${icon}</text>`;
+      }
+    }
+  });
+
+  svg += '</svg>';
+  return svg;
+}
+
 function buildAssemblySteps(board) {
   const hasLevantine = state.selectedThemes.some(t =>
     ['levantine','middleeastern','turkish','persian','northafrican'].includes(t)
   );
-
   const steps = [
     {
       title: 'Start with ramekins',
-      body: 'Place your small bowls and ramekins first. They anchor the board and everything else builds around them.',
+      body: 'Place your small bowls first. They anchor the board — everything builds around them.',
       items: board.spreads?.map(i => i.name).join(', ') || ''
     },
     {
       title: 'Place your cheeses',
-      body: 'Set cheeses at different points across the board. Soft cheeses near the center, hard cheeses toward edges. Leave space around each for guests to cut.',
+      body: 'Set cheeses at different points. Soft cheeses near center, hard cheeses toward edges. Leave space around each for guests to cut.',
       items: board.cheeses?.map(i => i.name).join(', ') || ''
     },
     {
       title: 'Layer in the meats',
-      body: 'Fan sliced meats near the cheeses. Fold mortadella and bologna into roses or ribbons. Fold basturma and sujuk into small stacks.',
+      body: 'Fan sliced meats near the cheeses. Fold mortadella and bologna into roses. Stack basturma and sujuk in small piles.',
       items: board.meats?.map(i => i.name).join(', ') || ''
     },
     {
       title: 'Fill the edges with bread & crackers',
       body: hasLevantine
-        ? 'Tuck pita wedges and lavash along the edges — these are the scoops. Stack crackers in a separate corner.'
-        : 'Arrange crackers and bread slices along the board edges. Fan them out so they\'re easy to grab.',
-      items: [...(board.breads?.map(i => i.name) || []), ...(board.crackers?.map(i => i.name) || [])].join(', ') || ''
+        ? 'Tuck pita wedges and lavash along the edges — these are your scoops. Stack crackers separately in a corner.'
+        : "Arrange crackers and bread slices along the board edges. Fan them out so they're easy to grab.",
+      items: [...(board.breads?.map(i=>i.name)||[]), ...(board.crackers?.map(i=>i.name)||[])].join(', ')
     },
     {
       title: 'Add fruits for color',
-      body: 'Cluster grapes in one corner. Scatter dates and dried fruits in small groups near cheeses. Fresh fruit adds height — stack sliced pear or figs.',
+      body: 'Cluster grapes in one corner. Scatter dates and dried fruits near cheeses. Stack sliced pear or figs for height.',
       items: board.fruits?.map(i => i.name).join(', ') || ''
     },
     {
       title: 'Scatter nuts and pickles',
-      body: 'Fill gaps with nuts — they go anywhere. Pickles and olives go near meats. Pink pickled turnips near labneh for color contrast.',
-      items: [
-        ...(board.nuts?.map(i => i.name) || []),
-        ...(board.pickles?.map(i => i.name) || [])
-      ].join(', ') || ''
+      body: 'Nuts fill gaps anywhere. Pickles and olives go near meats. Pink pickled turnips near labneh for color contrast.',
+      items: [...(board.nuts?.map(i=>i.name)||[]), ...(board.pickles?.map(i=>i.name)||[])].join(', ')
     },
     {
       title: 'Add vegetables along the rim',
@@ -969,172 +1094,19 @@ function buildAssemblySteps(board) {
       items: board.vegetables?.map(i => i.name).join(', ') || ''
     },
     {
-      title: 'Finish with extras & honey',
-      body: 'Drizzle honey near aged cheeses. Place za\'atar and sumac near bread and labneh. Small touches of color where the board looks bare.',
+      title: 'Finish with extras',
+      body: "Drizzle honey near aged cheeses. Place za'atar and sumac near bread and labneh. Small touches where the board looks bare.",
       items: board.extras?.map(i => i.name).join(', ') || ''
     },
     {
       title: 'Presentation layer',
-      body: 'Tuck fresh herb sprigs between sections. Add edible flowers if you found them. Small honeycomb near a blue or aged cheese if available.',
-      items: 'Rosemary, thyme, edible flowers, honeycomb — see Presentation section'
+      body: "Tuck fresh herb sprigs between sections. Add edible flowers if you found them. Honeycomb near an aged cheese.",
+      items: 'Rosemary, thyme, edible flowers, honeycomb — see Presentation section on your board'
     }
   ];
-
-  // Filter steps where there are no items
   return steps.filter(s => s.items.length > 0 || s.title === 'Presentation layer');
 }
 
-// Draw the board SVG
-function drawBoardSVG(layout, board) {
-  const { boardW, boardH, boardShape, zones } = layout;
-  const pad = 20;
-  const svgW = boardW + pad * 2;
-  const svgH = boardH + pad * 2;
-
-  // Board background color based on theme
-  const hasLevantine = state.selectedThemes.some(t =>
-    ['levantine','middleeastern','turkish','persian'].includes(t)
-  );
-  const boardFill = hasLevantine ? '#f2ede0' : '#f5efe6';
-  const boardStroke = '#c8b090';
-
-  let svg = `<svg viewBox="0 0 ${svgW} ${svgH}" xmlns="http://www.w3.org/2000/svg" class="layout-board-svg">`;
-
-  // Drop shadow filter
-  svg += `<defs>
-    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
-      <feDropShadow dx="0" dy="3" stdDeviation="6" flood-color="rgba(44,31,14,0.2)"/>
-    </filter>
-    <filter id="zone-shadow">
-      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="rgba(44,31,14,0.1)"/>
-    </filter>
-  </defs>`;
-
-  // Board shape
-  const bx = pad, by = pad, bw = boardW, bh = boardH;
-  if (boardShape === 'oval') {
-    svg += `<ellipse cx="${bx + bw/2}" cy="${by + bh/2}" rx="${bw/2}" ry="${bh/2}"
-      fill="${boardFill}" stroke="${boardStroke}" stroke-width="3" filter="url(#shadow)"/>`;
-    // Wood grain lines
-    for (let i = 1; i < 5; i++) {
-      const gy = by + (bh / 5) * i;
-      svg += `<line x1="${bx + 20}" y1="${gy}" x2="${bx + bw - 20}" y2="${gy}"
-        stroke="${boardStroke}" stroke-width="0.5" opacity="0.3"/>`;
-    }
-  } else {
-    const r = 16;
-    svg += `<rect x="${bx}" y="${by}" width="${bw}" height="${bh}" rx="${r}"
-      fill="${boardFill}" stroke="${boardStroke}" stroke-width="3" filter="url(#shadow)"/>`;
-    for (let i = 1; i < 6; i++) {
-      const gy = by + (bh / 6) * i;
-      svg += `<line x1="${bx + r}" y1="${gy}" x2="${bx + bw - r}" y2="${gy}"
-        stroke="${boardStroke}" stroke-width="0.5" opacity="0.3"/>`;
-    }
-  }
-
-  // Draw zones
-  zones.forEach(zone => {
-    const col = ZONE_COLORS[zone.cat] || { fill: '#f0ece8', stroke: '#c0b0a0', label: '#6b5540' };
-    const zx = pad + zone.x * boardW;
-    const zy = pad + zone.y * boardH;
-
-    // Get first item name for this category on the current board
-    const catItems = board[zone.cat] || [];
-    const itemNames = catItems.map(i => i.name);
-
-    // Truncate display name to fit
-    const truncate = (str, max) => str.length > max ? str.substring(0, max - 1) + '…' : str;
-
-    if (zone.shape === 'ramekin') {
-      // Circle ramekin
-      const r = zone.r * boardW;
-      svg += `<circle cx="${zx}" cy="${zy}" r="${r}"
-        fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5" filter="url(#zone-shadow)"/>`;
-      // Inner circle
-      svg += `<circle cx="${zx}" cy="${zy}" r="${r * 0.65}"
-        fill="${col.fill}" stroke="${col.stroke}" stroke-width="0.8" opacity="0.6"/>`;
-      // Label
-      const item = catItems[0]?.name ? truncate(catItems[0].name.split('(')[0].trim(), 12) : zone.label;
-      svg += `<text x="${zx}" y="${zy + 3}" text-anchor="middle" dominant-baseline="middle"
-        font-family="Lato,sans-serif" font-size="${Math.max(7, r * 0.55)}" font-weight="700"
-        fill="${col.label}">${item}</text>`;
-
-    } else if (zone.shape === 'rect') {
-      const zw = zone.w * boardW;
-      const zh = zone.h * boardH;
-      svg += `<rect x="${zx}" y="${zy}" width="${zw}" height="${zh}" rx="6"
-        fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5" filter="url(#zone-shadow)"/>`;
-      // Category icon label at top
-      svg += `<text x="${zx + zw/2}" y="${zy + 9}" text-anchor="middle"
-        font-family="Lato,sans-serif" font-size="7" font-weight="700" text-transform="uppercase"
-        fill="${col.label}" opacity="0.8">${zone.label.toUpperCase()}</text>`;
-      // Item names
-      itemNames.slice(0, 3).forEach((name, i) => {
-        const lineY = zy + 20 + i * 11;
-        if (lineY < zy + zh - 4) {
-          svg += `<text x="${zx + zw/2}" y="${lineY}" text-anchor="middle"
-            font-family="Lato,sans-serif" font-size="8" fill="${col.label}"
-            >${truncate(name.split('(')[0].trim(), Math.floor(zw / 5.5))}</text>`;
-        }
-      });
-
-    } else if (zone.shape === 'organic') {
-      // Organic blob shape for fruits
-      const zw = zone.w * boardW;
-      const zh = zone.h * boardH;
-      const cx = zx + zw/2, cy = zy + zh/2;
-      const rx = zw/2, ry = zh/2;
-      svg += `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"
-        fill="${col.fill}" stroke="${col.stroke}" stroke-width="1.5" filter="url(#zone-shadow)"/>`;
-      svg += `<text x="${cx}" y="${cy - 6}" text-anchor="middle"
-        font-family="Lato,sans-serif" font-size="7" font-weight="700"
-        fill="${col.label}">${zone.label.toUpperCase()}</text>`;
-      itemNames.slice(0, 2).forEach((name, i) => {
-        svg += `<text x="${cx}" y="${cy + 5 + i * 10}" text-anchor="middle"
-          font-family="Lato,sans-serif" font-size="7.5" fill="${col.label}"
-          >${truncate(name.split('(')[0].trim(), Math.floor(rx * 2 / 5.5))}</text>`;
-      });
-
-    } else if (zone.shape === 'scatter') {
-      // Scatter dots for nuts/pickles
-      const zw = zone.w * boardW;
-      const zh = zone.h * boardH;
-      svg += `<rect x="${zx}" y="${zy}" width="${zw}" height="${zh}" rx="8"
-        fill="${col.fill}" stroke="${col.stroke}" stroke-width="1" stroke-dasharray="3,2"
-        filter="url(#zone-shadow)"/>`;
-      // Scatter dots
-      const dotPositions = [[0.2,0.4],[0.5,0.3],[0.8,0.5],[0.35,0.7],[0.65,0.65]];
-      dotPositions.slice(0, 4).forEach(([dx, dy]) => {
-        svg += `<circle cx="${zx + dx*zw}" cy="${zy + dy*zh}" r="3"
-          fill="${col.stroke}" opacity="0.7"/>`;
-      });
-      svg += `<text x="${zx + zw/2}" y="${zy - 4}" text-anchor="middle"
-        font-family="Lato,sans-serif" font-size="7" font-weight="700"
-        fill="${col.label}">${zone.label.toUpperCase()}</text>`;
-
-    } else if (zone.shape === 'dot') {
-      // Small dot for extras/honey
-      const zw = zone.w * boardW;
-      const zh = zone.h * boardH;
-      const cx = zx + zw/2, cy = zy + zh/2;
-      svg += `<ellipse cx="${cx}" cy="${cy}" rx="${zw/2}" ry="${zh/2}"
-        fill="${col.fill}" stroke="${col.stroke}" stroke-width="1"/>`;
-      svg += `<text x="${cx}" y="${cy + 3}" text-anchor="middle" dominant-baseline="middle"
-        font-family="Lato,sans-serif" font-size="7" fill="${col.label}">${zone.label}</text>`;
-    }
-  });
-
-  // Board handle (decorative)
-  if (boardShape === 'oval') {
-    svg += `<ellipse cx="${pad + boardW * 0.5}" cy="${pad + boardH + 14}" rx="24" ry="8"
-      fill="${boardFill}" stroke="${boardStroke}" stroke-width="2"/>`;
-  }
-
-  svg += '</svg>';
-  return svg;
-}
-
-// Render the full layout guide screen
 function renderLayoutGuide() {
   const main = $('layout-main');
   main.innerHTML = '';
@@ -1142,39 +1114,55 @@ function renderLayoutGuide() {
   const layout = LAYOUTS[state.boardSize];
   const board  = state.currentBoard;
 
-  // Meta
-  $('layout-meta').textContent = `${BOARD_SIZES[state.boardSize].label} board · ${state.selectedThemes.map(id => THEMES.find(t => t.id === id)?.label).join(', ')}`;
+  $('layout-meta').textContent = `${BOARD_SIZES[state.boardSize].label} · ${state.selectedThemes.map(id => THEMES.find(t=>t.id===id)?.label).join(', ')}`;
 
-  // Board SVG diagram
+  // ── SVG DIAGRAM ──
   const wrap = document.createElement('div');
   wrap.className = 'layout-board-wrap';
   wrap.innerHTML = drawBoardSVG(layout, board);
   main.appendChild(wrap);
 
-  // Legend
+  // ── NUMBERED LEGEND ──
+  const legendLabel = document.createElement('div');
+  legendLabel.className = 'layout-section-label';
+  legendLabel.textContent = 'Zone reference';
+  main.appendChild(legendLabel);
+
   const legend = document.createElement('div');
   legend.className = 'layout-legend';
-  legend.innerHTML = `<div class="layout-legend-title">Zone Guide</div><div class="layout-legend-grid"></div>`;
-  const legendGrid = legend.querySelector('.layout-legend-grid');
+  const legendGrid = document.createElement('div');
+  legendGrid.className = 'layout-legend-grid';
+  legendGrid.style.gridTemplateColumns = '1fr';
+  legendGrid.style.gap = '6px';
 
-  const shownCats = new Set();
-  layout.zones.forEach(zone => {
-    if (shownCats.has(zone.cat)) return;
-    shownCats.add(zone.cat);
-    const col = ZONE_COLORS[zone.cat];
-    const meta = CAT_META[zone.cat];
-    if (!col || !meta) return;
-    const item = document.createElement('div');
-    item.className = 'layout-legend-item';
-    item.innerHTML = `
-      <div class="layout-legend-dot" style="background:${col.stroke}"></div>
-      <span>${meta.icon} ${meta.label}</span>
+  CAT_ORDER.forEach((cat, i) => {
+    const col  = ZONE_COLORS[cat];
+    const meta = CAT_META[cat];
+    const items = (board[cat] || []).map(item => item.name).join(', ');
+    if (!items) return;
+
+    const row = document.createElement('div');
+    row.className = 'layout-legend-item';
+    row.style.cssText = 'align-items:flex-start; gap:10px; padding:6px 0; border-bottom:1px dashed var(--border);';
+    row.innerHTML = `
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0;min-width:52px;">
+        <div style="width:22px;height:22px;border-radius:50%;background:${col.stroke};
+          display:flex;align-items:center;justify-content:center;
+          font-size:11px;font-weight:900;color:white;flex-shrink:0;">${i+1}</div>
+        <span style="font-size:18px;line-height:1;">${meta.icon}</span>
+      </div>
+      <div style="flex:1;">
+        <div style="font-size:12px;font-weight:700;color:var(--ink);margin-bottom:2px;">${meta.label}</div>
+        <div style="font-size:11px;color:var(--ink-muted);line-height:1.4;">${items}</div>
+      </div>
     `;
-    legendGrid.appendChild(item);
+    legendGrid.appendChild(row);
   });
+
+  legend.appendChild(legendGrid);
   main.appendChild(legend);
 
-  // Assembly steps
+  // ── ASSEMBLY STEPS ──
   const stepsLabel = document.createElement('div');
   stepsLabel.className = 'layout-section-label';
   stepsLabel.textContent = 'How to build it — step by step';
@@ -1182,13 +1170,11 @@ function renderLayoutGuide() {
 
   const tips = document.createElement('div');
   tips.className = 'layout-tips';
-
-  const steps = buildAssemblySteps(board);
-  steps.forEach((step, i) => {
+  buildAssemblySteps(board).forEach((step, i) => {
     const card = document.createElement('div');
     card.className = 'layout-tip-card';
     card.innerHTML = `
-      <div class="layout-tip-step">${i + 1}</div>
+      <div class="layout-tip-step">${i+1}</div>
       <div class="layout-tip-content">
         <div class="layout-tip-title">${step.title}</div>
         <div class="layout-tip-body">${step.body}</div>
@@ -1199,31 +1185,27 @@ function renderLayoutGuide() {
   });
   main.appendChild(tips);
 
-  // General tips
+  // ── GENERAL PRINCIPLES ──
   const genLabel = document.createElement('div');
   genLabel.className = 'layout-section-label';
   genLabel.textContent = 'General principles';
   main.appendChild(genLabel);
 
-  const genTips = [
-    { icon: '🌡️', tip: 'Pull meats and cheeses from the fridge 30–45 minutes before serving. Cold kills flavor.' },
-    { icon: '📐', tip: 'Odd numbers look better than even. Three cheese wedges, five olive clusters.' },
-    { icon: '🎨', tip: 'Think in color — dark olives next to pale labneh, pink turnips next to white cheese.' },
-    { icon: '📏', tip: 'Vary the height. Stack crackers, fold meats, leave whole figs uncut for visual drama.' },
-    { icon: '🏷️', tip: 'Label anything unfamiliar. Guests appreciate knowing what they\'re about to try.' },
-    { icon: '🫙', tip: 'Fill the board completely — gaps make it look unfinished. Nuts and herbs are your gap-fillers.' },
-  ];
-
   const genList = document.createElement('div');
   genList.className = 'layout-tips';
-  genTips.forEach(({ icon, tip }) => {
+  [
+    ['🌡️', 'Pull meats and cheeses from the fridge 30–45 minutes before serving. Cold kills flavor.'],
+    ['📐', 'Odd numbers look better than even. Three cheese wedges, five olive clusters.'],
+    ['🎨', 'Think in color — dark olives next to pale labneh, pink turnips next to white cheese.'],
+    ['📏', 'Vary the height. Stack crackers, fold meats, leave whole figs uncut for visual drama.'],
+    ["🏷️", "Label anything unfamiliar. Guests appreciate knowing what they're about to try."],
+    ["🫙", "Fill the board completely — gaps make it look unfinished. Nuts and herbs are your gap-fillers."],
+  ].forEach(([icon, tip]) => {
     const card = document.createElement('div');
     card.className = 'layout-tip-card';
     card.innerHTML = `
       <div class="layout-tip-step" style="background:var(--ink-muted);font-size:14px;">${icon}</div>
-      <div class="layout-tip-content">
-        <div class="layout-tip-body">${tip}</div>
-      </div>
+      <div class="layout-tip-content"><div class="layout-tip-body">${tip}</div></div>
     `;
     genList.appendChild(card);
   });
@@ -1232,11 +1214,6 @@ function renderLayoutGuide() {
 
 // Navigation
 screens.layout = $('screen-layout');
-
-$('btn-layout').addEventListener('click', () => {
-  renderLayoutGuide();
-  showScreen('layout');
-});
-
+$('btn-layout').addEventListener('click', () => { renderLayoutGuide(); showScreen('layout'); });
 $('btn-back-layout').addEventListener('click', () => showScreen('board'));
 $('btn-print-layout').addEventListener('click', () => window.print());
