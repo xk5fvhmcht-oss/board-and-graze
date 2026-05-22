@@ -12,7 +12,7 @@
 //   E — specialty, deep cuts, even a Levantine American pauses here
 // ============================================================
 
-const APP_VERSION = "1.2.0";
+const APP_VERSION = "1.4.0";
 
 const THEMES = [
   { id: "american",      label: "American",        flag: "🇺🇸" },

@@ -1,9 +1,9 @@
 // ═══════════════════════════════════════════
 // OMAR'S BOARD & GRAZE — SERVICE WORKER
-// Version 1.3.1
+// Version 1.4.0
 // ═══════════════════════════════════════════
 
-const CACHE = 'board-graze-v1.3.1';
+const CACHE = 'board-graze-v1.4.0';
 
 const ASSETS = [
   './',

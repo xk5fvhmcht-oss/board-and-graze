@@ -166,6 +166,10 @@
   <main class="board-main" id="board-main"></main>
 
   <div class="board-actions">
+    <button class="btn-secondary" id="btn-layout" title="Board Layout Guide">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
+      Layout
+    </button>
     <button class="btn-secondary" id="btn-reroll-all">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       Reroll all
@@ -216,6 +220,30 @@
     <div style="width:40px"></div>
   </header>
   <main class="library-main" id="library-main"></main>
+</div>
+
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 5 — BOARD LAYOUT GUIDE
+════════════════════════════════════════════ -->
+<div id="screen-layout" class="screen">
+  <header class="app-header">
+    <button class="btn-icon btn-back" id="btn-back-layout" aria-label="Back">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-inner center">
+      <h1 class="app-title sm">Layout Guide</h1>
+      <p class="app-sub" id="layout-meta"></p>
+    </div>
+    <button class="btn-icon" id="btn-print-layout" aria-label="Print">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>
+      </svg>
+    </button>
+  </header>
+  <main class="layout-main" id="layout-main"></main>
 </div>
 
 <!-- ═══════════════════════════════════════════
