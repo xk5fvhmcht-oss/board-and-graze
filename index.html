@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
-  <meta name="apple-mobile-web-app-title" content="Board & Graze">
+  <meta name="apple-mobile-web-app-title" content="Omar's Board &amp; Graze">
   <meta name="description" content="Charcuterie board randomizer — Dallas stores">
   <link rel="manifest" href="manifest.json">
   <link rel="apple-touch-icon" href="/board-and-graze/icons/apple-touch-icon.png">
@@ -29,7 +29,10 @@
       <h1 class="app-title">Omar's Board <span class="amp">&amp;</span> Graze</h1>
       <p class="app-sub">Built on a Levantine American palate</p>
     </div>
-    <button class="btn-icon" id="btn-reset" aria-label="Reset" title="Reset everything">
+    <button class="btn-icon" id="btn-library" aria-label="Item Library" title="Item Library">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+    </button>
+    <button class="btn-icon" id="btn-reset" aria-label="Reset" title="Reset">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
     </button>
     <button class="btn-icon" id="btn-customize" aria-label="Customize">
@@ -41,6 +44,13 @@
   </header>
 
   <main class="setup-main">
+
+    <!-- ANCHOR INDICATOR -->
+    <div class="anchor-indicator" id="anchor-indicator" style="display:none">
+      <span>⚓</span>
+      <span id="anchor-indicator-text"></span>
+      <button class="anchor-indicator-link" id="btn-go-library">Manage</button>
+    </div>
 
     <!-- THEME TILES -->
     <section class="section">
@@ -96,7 +106,6 @@
         </button>
       </div>
     </section>
-
 
     <!-- BOARD PROFILE -->
     <section class="section">
@@ -154,9 +163,7 @@
     </button>
   </header>
 
-  <main class="board-main" id="board-main">
-    <!-- Dynamically populated -->
-  </main>
+  <main class="board-main" id="board-main"></main>
 
   <div class="board-actions">
     <button class="btn-secondary" id="btn-reroll-all">
@@ -189,9 +196,26 @@
       </svg>
     </button>
   </header>
-  <main class="shopping-main" id="shopping-main">
-    <!-- Dynamically populated -->
-  </main>
+  <main class="shopping-main" id="shopping-main"></main>
+</div>
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 4 — ITEM LIBRARY
+════════════════════════════════════════════ -->
+<div id="screen-library" class="screen">
+  <header class="app-header">
+    <button class="btn-icon btn-back" id="btn-back-library" aria-label="Back">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-inner center">
+      <h1 class="app-title sm">Item Library</h1>
+      <p class="app-sub" id="library-meta"></p>
+    </div>
+    <div style="width:40px"></div>
+  </header>
+  <main class="library-main" id="library-main"></main>
 </div>
 
 <!-- ═══════════════════════════════════════════
@@ -225,24 +249,16 @@
         <div id="cat-sliders"></div>
       </div>
 
-      <!-- EXCLUDED ITEMS -->
-      <div class="customize-section" id="excluded-section" hidden>
-        <label class="customize-label">Hidden items</label>
-        <p class="customize-hint">Items you've marked "Don't show again"</p>
-        <div id="excluded-list"></div>
-        <button class="btn-text-danger" id="btn-restore-all">Restore all hidden items</button>
-      </div>
-
     </div>
   </div>
 </div>
 
 <script>
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
-    }
-  </script>
-  <script src="data.js"></script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js"));
+  }
+</script>
+<script src="data.js"></script>
 <script src="app.js"></script>
 </body>
 </html>
