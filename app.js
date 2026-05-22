@@ -234,6 +234,40 @@ function renderBoard() {
 
     main.appendChild(card);
   });
+
+  // Presentation items section
+  const presSection = document.createElement('div');
+  presSection.className = 'cat-card';
+  presSection.style.background = 'linear-gradient(135deg, #faf7f0, #f5efe6)';
+  presSection.style.borderStyle = 'dashed';
+
+  const presHeader = document.createElement('div');
+  presHeader.className = 'cat-header';
+  presHeader.innerHTML = '<span class="cat-name">🌸 Presentation</span><span class="cat-serving">when you find them</span>';
+  presSection.appendChild(presHeader);
+
+  const presItems = document.createElement('div');
+  presItems.className = 'cat-items';
+
+  PRESENTATION_ITEMS.forEach(item => {
+    const row = document.createElement('div');
+    row.style.cssText = 'padding:4px 0;border-bottom:1px dashed var(--border);';
+    row.innerHTML = `
+      <div style="font-size:14px;color:var(--ink);">${item.name}</div>
+      <div style="font-size:11px;color:var(--ink-faint);margin-top:2px;font-style:italic;">${item.note}</div>
+      <div style="margin-top:3px;">${item.store.map(s => `<span class="store-badge store-${s}">${s}</span>`).join(' ')}</div>
+    `;
+    presItems.appendChild(row);
+  });
+
+  presSection.appendChild(presItems);
+
+  const presTip = document.createElement('div');
+  presTip.className = 'cat-tip';
+  presTip.textContent = "Not food — these make your board look like something. Buy what you find, skip what you don't.";
+  presSection.appendChild(presTip);
+
+  main.appendChild(presSection);
 }
 
 function buildItemRow(item, category) {
@@ -484,6 +518,29 @@ function renderShoppingList() {
     supplies.appendChild(row);
   });
   main.appendChild(supplies);
+
+  // Presentation items section
+  const presSection = document.createElement('div');
+  presSection.className = 'shop-supplies';
+  presSection.style.marginTop = '16px';
+  presSection.style.borderStyle = 'dashed';
+  presSection.innerHTML = '<div class="shop-supplies-title">🌸 Presentation & Garnish</div><p style="font-size:11px;color:var(--ink-faint);font-style:italic;margin-bottom:10px;">Buy when you find them — not required, but they make the board.</p>';
+
+  PRESENTATION_ITEMS.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'supply-row';
+    const storeText = item.store.map(s => STORE_NAMES[s].split(' ')[0]).join(', ');
+    row.innerHTML = `
+      <div style="flex:1;">
+        <div class="supply-name">${item.name}</div>
+        <div class="supply-note">${item.note}</div>
+      </div>
+      <div style="font-size:10px;color:var(--ink-faint);flex-shrink:0;">${storeText}</div>
+    `;
+    presSection.appendChild(row);
+  });
+
+  main.appendChild(presSection);
 }
 
 // ── ITEM LIBRARY ──
