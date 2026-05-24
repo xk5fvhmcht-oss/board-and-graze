@@ -727,7 +727,11 @@ function buildLibraryItemRow(item, category) {
 }
 
 // ── PRINT ──
-$('btn-print').addEventListener('click', () => window.print());
+$('btn-print').addEventListener('click', () => {
+  document.body.dataset.print = 'shopping';
+  window.print();
+  delete document.body.dataset.print;
+});
 
 // ── BACK BUTTONS ──
 $('btn-back').addEventListener('click', () => showScreen('setup'));
@@ -1216,4 +1220,8 @@ function renderLayoutGuide() {
 screens.layout = $('screen-layout');
 $('btn-layout').addEventListener('click', () => { renderLayoutGuide(); showScreen('layout'); });
 $('btn-back-layout').addEventListener('click', () => showScreen('board'));
-$('btn-print-layout').addEventListener('click', () => window.print());
+$('btn-print-layout').addEventListener('click', () => {
+  document.body.dataset.print = 'layout';
+  window.print();
+  delete document.body.dataset.print;
+});

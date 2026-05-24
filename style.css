@@ -792,12 +792,30 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
 
 /* ── PRINT STYLES ── */
 @media print {
-  .app-header, .board-actions, .btn-icon, .btn-reroll-item, .btn-hide-item { display: none !important; }
-  .screen { display: block !important; min-height: unset; }
-  #screen-setup, #screen-board, #panel-customize { display: none !important; }
-  #screen-shopping { display: block !important; }
+  /* Hide all chrome */
+  .app-header, .board-actions, .btn-icon,
+  .btn-reroll-item, .btn-hide-item, .btn-anchor-item,
+  .roll-wrap, .board-actions { display: none !important; }
+
+  /* Hide all screens by default */
+  .screen, #panel-customize, #panel-overlay { display: none !important; }
+
+  /* Show only the screen being printed */
+  body[data-print="shopping"] #screen-shopping,
+  body[data-print="layout"]   #screen-layout  {
+    display: block !important;
+    min-height: unset;
+  }
+
+  /* Clean print styles */
   body { background: #fff; color: #000; }
   .shop-check { border-color: #999; background: #fff; }
+  .layout-main { padding: 0; }
+  .shopping-main { padding: 0; }
+
+  /* Page breaks */
+  .shop-section { page-break-inside: avoid; }
+  .layout-tip-card { page-break-inside: avoid; }
 }
 
 /* ── DIVIDER ── */
@@ -1162,10 +1180,4 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
   margin: 18px 0 10px;
 }
 
-/* Print */
-@media print {
-  #screen-layout { display: block !important; min-height: unset; }
-  #screen-setup, #screen-board, #screen-shopping, #screen-library, #panel-customize { display: none !important; }
-  .app-header .btn-icon { display: none !important; }
-  .layout-main { padding: 0; }
-}
+
