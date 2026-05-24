@@ -730,7 +730,6 @@ function buildLibraryItemRow(item, category) {
 $('btn-print').addEventListener('click', () => {
   document.body.dataset.print = 'shopping';
   window.print();
-  delete document.body.dataset.print;
 });
 
 // ── BACK BUTTONS ──
@@ -844,6 +843,11 @@ function init() {
   const vEl = $('app-version');
   if (vEl) vEl.textContent = 'v' + APP_VERSION;
 }
+
+// Clean up print attribute after dialog closes
+window.addEventListener('afterprint', () => {
+  delete document.body.dataset.print;
+});
 
 init();
 
@@ -1223,5 +1227,4 @@ $('btn-back-layout').addEventListener('click', () => showScreen('board'));
 $('btn-print-layout').addEventListener('click', () => {
   document.body.dataset.print = 'layout';
   window.print();
-  delete document.body.dataset.print;
 });
