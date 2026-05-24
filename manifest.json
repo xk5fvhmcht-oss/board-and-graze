@@ -2,7 +2,7 @@
   "name": "Omar's Board & Graze",
   "short_name": "Omar's Board",
   "description": "Built on a Levantine American palate — where hummus and cheddar belong on the same board.",
-  "version": "1.5.0",
+  "version": "1.6.0",
   "start_url": "./index.html",
   "display": "standalone",
   "background_color": "#f5efe6",

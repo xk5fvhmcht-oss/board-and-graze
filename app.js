@@ -149,29 +149,40 @@ function rollAndShow() {
   const board = {};
 
   for (const category of Object.keys(ITEMS)) {
-    // Get anchored items for this category
     const anchored = ITEMS[category].filter(item =>
       state.anchoredItems.has(item.name) && !state.excludedItems.has(item.name)
     );
-
     const n = getCategoryCount(category);
-
-    // Get eligible pool (respects theme + profile + exclusions, minus already anchored)
     const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
       .filter(item => !state.excludedItems.has(item.name) && !state.anchoredItems.has(item.name));
-
-    // Anchors always included, then fill remaining slots from pool
-    // Anchors don't count against slot limit
     const rolled = eligible.length > 0 && n > 0
-      ? pickRandom(eligible, Math.min(n, eligible.length))
+      ? rollBoard([...eligible], Math.min(n, eligible.length))
       : [];
-
     board[category] = [...anchored, ...rolled];
   }
 
   state.currentBoard = board;
+  state.rerollQueues  = {}; // reset discovery queues on full roll
   renderBoard();
   showScreen('board');
+}
+
+// Smart roll for a category — uses family constraints from data.js rollBoard logic
+function rollBoard(eligible, n) {
+  const exclusive    = eligible.filter(i => FAMILIES[i.f]?.type === 'exclusive');
+  const foundational = eligible.filter(i => FAMILIES[i.f]?.type === 'foundational');
+  const shuffledEx   = [...exclusive].sort(() => Math.random() - 0.5);
+  const shuffledFnd  = [...foundational].sort(() => Math.random() - 0.5);
+  const selected = []; const usedFamilies = new Set();
+  for (const item of shuffledEx) {
+    if (selected.length >= n) break;
+    if (!usedFamilies.has(item.f)) { selected.push(item); usedFamilies.add(item.f); }
+  }
+  for (const item of shuffledFnd) {
+    if (selected.length >= n) break;
+    selected.push(item);
+  }
+  return selected;
 }
 
 // ── RENDER BOARD ──
@@ -370,15 +381,45 @@ function findCategoryForItem(name) {
   return null;
 }
 
-// ── REROLL SINGLE ITEM ──
+// ── REROLL SINGLE ITEM — discovery queue ──
+function getOrCreateQueue(itemName, category) {
+  if (!state.rerollQueues[itemName]) {
+    // Build full eligible pool for this slot — all items that match theme+profile
+    // No family constraint in re-roll — user is discovering everything
+    const allOnBoard = state.currentBoard[category].map(i => i.name);
+    const pool = getEligibleItems(category, state.selectedThemes, state.boardProfile)
+      .filter(i => !state.excludedItems.has(i.name) && !state.anchoredItems.has(i.name));
+    // Shuffle pool, put current item last so it cycles back eventually
+    const shuffled = [...pool].sort(() => Math.random() - 0.5);
+    state.rerollQueues[itemName] = { queue: shuffled, pos: 0, total: shuffled.length };
+  }
+  return state.rerollQueues[itemName];
+}
+
 function rerollItem(category, currentName, rowEl) {
-  const allItems = state.currentBoard[category].map(i => i.name);
-  const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
-    .filter(item => !state.excludedItems.has(item.name) && !state.anchoredItems.has(item.name) && !allItems.includes(item.name));
-  if (eligible.length === 0) return;
-  const newItem = pickRandom(eligible, 1)[0];
+  const q = getOrCreateQueue(currentName, category);
+  if (q.total <= 1) return; // nothing else to show
+
+  // Advance position, skip current item
+  let attempts = 0;
+  let newItem;
+  do {
+    q.pos = (q.pos + 1) % q.total;
+    newItem = q.queue[q.pos];
+    attempts++;
+  } while (newItem.name === currentName && attempts < q.total);
+
+  if (!newItem || newItem.name === currentName) return;
+
+  // Transfer queue key to new item name
+  state.rerollQueues[newItem.name] = { ...q };
+  delete state.rerollQueues[currentName];
+
+  // Update board state
   const idx = state.currentBoard[category].findIndex(i => i.name === currentName);
   if (idx !== -1) state.currentBoard[category][idx] = newItem;
+
+  // Animate swap
   rowEl.style.opacity = '0';
   rowEl.style.transition = 'opacity 0.15s';
   setTimeout(() => {
@@ -1228,3 +1269,176 @@ $('btn-print-layout').addEventListener('click', () => {
   document.body.dataset.print = 'layout';
   window.print();
 });
+// ═══════════════════════════════════════════
+// SURPRISE ME
+// ═══════════════════════════════════════════
+$('btn-surprise').addEventListener('click', () => {
+  const chosen = surpriseThemes();
+  state.selectedThemes = chosen;
+  updateThemeUI();
+  rollAndShow();
+});
+
+// ═══════════════════════════════════════════
+// BOARD HISTORY
+// ═══════════════════════════════════════════
+screens.history = $('screen-history');
+$('btn-history').addEventListener('click', () => { renderHistory(); showScreen('history'); });
+$('btn-back-history').addEventListener('click', () => showScreen('setup'));
+
+function saveHistory() {
+  localStorage.setItem('boardHistory', JSON.stringify(state.boardHistory));
+}
+
+// Save board — show modal
+$('btn-save-board').addEventListener('click', () => {
+  const input = $('board-name-input');
+  const themes = state.selectedThemes.map(id => THEMES.find(t=>t.id===id).label).join(' + ');
+  input.value = themes; // pre-fill with theme names
+  $('modal-save').hidden = false;
+  setTimeout(() => { input.focus(); input.select(); }, 100);
+});
+
+$('btn-cancel-save').addEventListener('click', () => { $('modal-save').hidden = true; });
+$('modal-overlay').addEventListener('click', () => { $('modal-save').hidden = true; });
+
+$('btn-confirm-save').addEventListener('click', () => {
+  const name = $('board-name-input').value.trim() || 'Untitled Board';
+  const entry = {
+    id:       Date.now(),
+    name,
+    date:     new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    themes:   [...state.selectedThemes],
+    boardSize: state.boardSize,
+    mealRole:  state.mealRole,
+    profile:   state.boardProfile,
+    headCount: state.headCount,
+    board:     JSON.parse(JSON.stringify(state.currentBoard)), // deep copy
+  };
+  state.boardHistory.unshift(entry); // newest first
+  if (state.boardHistory.length > 50) state.boardHistory.pop(); // cap at 50
+  saveHistory();
+  $('modal-save').hidden = true;
+
+  // Brief confirmation on the save button
+  const btn = $('btn-save-board');
+  const orig = btn.innerHTML;
+  btn.innerHTML = '<span style="font-size:16px;">✓</span>';
+  setTimeout(() => { btn.innerHTML = orig; }, 1500);
+});
+
+function renderHistory() {
+  const main = $('history-main');
+  main.innerHTML = '';
+  const history = state.boardHistory;
+
+  $('history-meta').textContent = history.length + ' saved board' + (history.length !== 1 ? 's' : '');
+
+  if (history.length === 0) {
+    main.innerHTML = '<div class="history-empty">No saved boards yet.<br>Roll a board and tap Save to keep it.</div>';
+    return;
+  }
+
+  history.forEach(entry => {
+    const card = document.createElement('div');
+    card.className = 'history-card';
+
+    const themeFlags = entry.themes.map(id => {
+      const t = THEMES.find(t => t.id === id);
+      return t ? t.flag : '';
+    }).join(' ');
+
+    const profLabel = PROFILES[entry.profile]?.label || entry.profile;
+    const sizeLabel = BOARD_SIZES[entry.boardSize]?.label || entry.boardSize;
+    const roleLabel = MEAL_ROLES[entry.mealRole]?.label || entry.mealRole;
+
+    card.innerHTML = `
+      <div class="history-card-header">
+        <div class="history-card-name">${entry.name}</div>
+        <div class="history-card-date">${entry.date}</div>
+      </div>
+      <div class="history-card-themes">${themeFlags}</div>
+      <div class="history-card-meta">${sizeLabel} · ${roleLabel} · ${entry.headCount} guests · ${profLabel}</div>
+    `;
+
+    // Show items summary
+    const itemsSummary = document.createElement('div');
+    itemsSummary.style.cssText = 'font-size:11px;color:var(--ink-faint);margin-bottom:8px;line-height:1.6;';
+    Object.entries(entry.board).forEach(([cat, items]) => {
+      if (items.length > 0) {
+        const meta = CAT_META[cat];
+        itemsSummary.innerHTML += `<span style="color:var(--ink-muted);font-weight:700;">${meta.icon}</span> ${items.map(i=>i.name).join(', ')}  `;
+      }
+    });
+    card.appendChild(itemsSummary);
+
+    // Action buttons
+    const actions = document.createElement('div');
+    actions.className = 'history-card-actions';
+
+    const rollAgainBtn = document.createElement('button');
+    rollAgainBtn.className = 'history-btn primary';
+    rollAgainBtn.textContent = 'Roll again';
+    rollAgainBtn.addEventListener('click', () => {
+      // Restore settings and roll fresh board with same params
+      state.selectedThemes = [...entry.themes];
+      state.boardSize       = entry.boardSize;
+      state.mealRole        = entry.mealRole;
+      state.boardProfile    = entry.profile;
+      state.headCount       = entry.headCount;
+      // Update UI
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === entry.boardSize));
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === entry.mealRole));
+      document.querySelectorAll('.profile-btn').forEach(b => b.classList.toggle('active', b.dataset.profile === entry.profile));
+      $('stepper-val').textContent = entry.headCount;
+      updateThemeUI();
+      rollAndShow();
+    });
+
+    const viewBtn = document.createElement('button');
+    viewBtn.className = 'history-btn';
+    viewBtn.textContent = 'View board';
+    viewBtn.addEventListener('click', () => {
+      // Restore the exact saved board — no re-roll
+      state.selectedThemes = [...entry.themes];
+      state.boardSize       = entry.boardSize;
+      state.mealRole        = entry.mealRole;
+      state.boardProfile    = entry.profile;
+      state.headCount       = entry.headCount;
+      state.currentBoard    = JSON.parse(JSON.stringify(entry.board));
+      state.rerollQueues    = {};
+      document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === entry.boardSize));
+      document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === entry.mealRole));
+      document.querySelectorAll('.profile-btn').forEach(b => b.classList.toggle('active', b.dataset.profile === entry.profile));
+      $('stepper-val').textContent = entry.headCount;
+      updateThemeUI();
+      renderBoard();
+      showScreen('board');
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'history-btn danger';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.addEventListener('click', () => {
+      state.boardHistory = state.boardHistory.filter(e => e.id !== entry.id);
+      saveHistory();
+      renderHistory();
+    });
+
+    actions.appendChild(rollAgainBtn);
+    actions.appendChild(viewBtn);
+    actions.appendChild(deleteBtn);
+    card.appendChild(actions);
+    main.appendChild(card);
+  });
+}
+
+// Clear all history
+$('btn-clear-history').addEventListener('click', () => {
+  if (state.boardHistory.length === 0) return;
+  state.boardHistory = [];
+  saveHistory();
+  renderHistory();
+});
+
+// Reset doesn't clear history (like anchors — permanent until manually deleted)

@@ -32,6 +32,9 @@
     <button class="btn-icon" id="btn-library" aria-label="Item Library" title="Item Library">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
     </button>
+    <button class="btn-icon" id="btn-history" aria-label="Board History" title="Board History">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </button>
     <button class="btn-icon" id="btn-reset" aria-label="Reset" title="Reset">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4"/></svg>
     </button>
@@ -131,10 +134,16 @@
 
     <!-- ROLL BUTTON -->
     <div class="roll-wrap">
-      <button class="btn-roll" id="btn-roll" disabled>
+      <div style="display:flex;gap:10px;">
+      <button class="btn-surprise" id="btn-surprise" title="Surprise Me — picks compatible themes and rolls">
+        <span style="font-size:18px;">🎲</span>
+        <span style="font-size:11px;font-family:var(--font-body);font-weight:700;">Surprise Me</span>
+      </button>
+      <button class="btn-roll" id="btn-roll" disabled style="flex:1;">
         <span class="roll-label">Roll the Board</span>
         <span class="roll-hint" id="roll-hint">Select at least one theme</span>
       </button>
+    </div>
     </div>
 
     <p style="text-align:center;font-size:11px;color:#a8937a;padding:8px 0 4px;font-family:Lato,sans-serif;" id="app-version"></p>
@@ -169,6 +178,10 @@
     <button class="btn-secondary" id="btn-layout" title="Board Layout Guide">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M3 9h18M9 21V9"/></svg>
       Layout
+    </button>
+    <button class="btn-secondary" id="btn-save-board" title="Save this board">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Save
     </button>
     <button class="btn-secondary" id="btn-reroll-all">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -222,6 +235,40 @@
   <main class="library-main" id="library-main"></main>
 </div>
 
+
+<!-- ═══════════════════════════════════════════
+     SCREEN 6 — BOARD HISTORY
+════════════════════════════════════════════ -->
+<div id="screen-history" class="screen">
+  <header class="app-header">
+    <button class="btn-icon btn-back" id="btn-back-history" aria-label="Back">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="15 18 9 12 15 6"/>
+      </svg>
+    </button>
+    <div class="header-inner center">
+      <h1 class="app-title sm">Board History</h1>
+      <p class="app-sub" id="history-meta"></p>
+    </div>
+    <button class="btn-icon btn-text" id="btn-clear-history" aria-label="Clear all history" title="Clear all history">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+    </button>
+  </header>
+  <main class="history-main" id="history-main"></main>
+</div>
+
+<!-- Save Board Modal -->
+<div id="modal-save" class="modal" hidden>
+  <div class="modal-overlay" id="modal-overlay"></div>
+  <div class="modal-sheet">
+    <h2 class="modal-title">Save this board</h2>
+    <input type="text" id="board-name-input" class="modal-input" placeholder="Give it a name..." maxlength="50">
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btn-cancel-save">Cancel</button>
+      <button class="btn-primary" id="btn-confirm-save">Save</button>
+    </div>
+  </div>
+</div>
 
 <!-- ═══════════════════════════════════════════
      SCREEN 5 — BOARD LAYOUT GUIDE
