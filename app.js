@@ -183,7 +183,7 @@ function renderBoard() {
   $('board-meta').textContent = `${BOARD_SIZES[state.boardSize].label} · ${MEAL_ROLES[state.mealRole].label} · ${state.headCount} guests · ${profLabel}`;
 
   // Levantine breakfast line
-  const levantineThemes = ['levantine','middleeastern','turkish','persian','northafrican'];
+  const levantineThemes = ['levantine','gulf','turkish','persian','northafrican','moroccan','armenian','egyptian'];
   const hasLevantine = state.selectedThemes.some(t => levantineThemes.includes(t));
   let taglineEl = document.getElementById('board-tagline');
   if (!taglineEl) {
@@ -1053,7 +1053,7 @@ function drawBoardSVG(layout, board) {
 
 function buildAssemblySteps(board) {
   const hasLevantine = state.selectedThemes.some(t =>
-    ['levantine','middleeastern','turkish','persian','northafrican'].includes(t)
+    ['levantine','gulf','turkish','persian','northafrican','moroccan','armenian','egyptian'].includes(t)
   );
   const steps = [
     {

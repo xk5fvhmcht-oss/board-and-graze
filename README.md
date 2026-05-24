@@ -10,7 +10,7 @@ A charcuterie board randomizer built for Dallas. Pork-free by design, sourced fr
 Install on iPhone: open in Safari → Share → Add to Home Screen
 
 ## Version
-**v1.4.0**
+**v1.5.0**
 
 ## Stores
 | Code | Store | Location |
@@ -87,3 +87,4 @@ Items are tagged C / S / E based on a Levantine American palate:
 | 1.3.0 | Anchor system, Item Library, anchor indicator, "In the Levant, this is called breakfast" |
 | 1.3.1 | Shanklish + Taboon bread added, service worker fixed, manifest updated |
 | 1.4.0 | Board Layout Guide — dynamic SVG diagram, zone map, step-by-step assembly guide |
+| 1.5.0 | 16 themes — Moroccan, Gulf & Iraq 🌴, Armenian, Egyptian, Indian added. Middle Eastern retired. Levantine gets 🌙. 24 new items. Date varieties. |
