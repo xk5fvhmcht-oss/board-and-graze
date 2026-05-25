@@ -1293,11 +1293,46 @@ $('btn-print-layout').addEventListener('click', () => {
 // SURPRISE ME
 // ═══════════════════════════════════════════
 $('btn-surprise').addEventListener('click', () => {
-  const chosen = surpriseThemes();
+  const chosen = smartSurpriseThemes(state.boardProfile);
   state.selectedThemes = chosen;
   updateThemeUI();
   rollAndShow();
 });
+
+// Smart surprise — always produces a full board
+// Picks 2-3 compatible themes, ensuring good category coverage
+function smartSurpriseThemes(profile) {
+  // Themes with strong Classic coverage (0 empty categories)
+  const strongClassic = ['american', 'levantine', 'gulf'];
+  // Themes with decent coverage (≤2 empty categories)
+  const decentCoverage = ['mediterranean', 'greek', 'persian', 'armenian', 'egyptian'];
+
+  // Pick a random affinity group
+  const affinityGroup = THEME_AFFINITIES[Math.floor(Math.random() * THEME_AFFINITIES.length)];
+  const shuffled = [...affinityGroup].sort(() => Math.random() - 0.5);
+
+  // Always pick 2 themes minimum
+  let chosen = shuffled.slice(0, 2);
+
+  // For Classic profile — ensure at least one theme has strong coverage
+  if (profile === 'classic') {
+    const hasStrong = chosen.some(t => [...strongClassic, ...decentCoverage].includes(t));
+    if (!hasStrong) {
+      // Replace the second theme with a strong classic theme that doesn't clash
+      const candidate = [...strongClassic, ...decentCoverage]
+        .filter(t => !chosen.includes(t))
+        .find(t => themesClash([chosen[0], t]).length === 0);
+      if (candidate) chosen[1] = candidate;
+    }
+  }
+
+  // Final clash check — fallback to single strong theme if needed
+  if (themesClash(chosen).length > 0) {
+    chosen = [strongClassic[Math.floor(Math.random() * strongClassic.length)]];
+  }
+
+  return chosen;
+}
 
 // ═══════════════════════════════════════════
 // BOARD HISTORY
