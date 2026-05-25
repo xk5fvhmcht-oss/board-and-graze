@@ -326,13 +326,33 @@ function buildItemRow(item, category) {
   anchorBtn.innerHTML = '⚓';
   anchorBtn.addEventListener('click', () => toggleAnchorItem(item.name, anchorBtn, row));
 
-  // Reroll button (hidden if anchored)
+  // Reroll button with discovery counter (hidden if anchored)
   const rerollBtn = document.createElement('button');
   rerollBtn.className = 'btn-reroll-item';
-  rerollBtn.title = 'Roll a different item';
+  rerollBtn.id = 'reroll-' + item.name.replace(/[^a-z0-9]/gi, '_');
+  rerollBtn.title = 'Cycle through all eligible items for this slot';
   rerollBtn.setAttribute('aria-label', 'Roll a different item');
-  rerollBtn.innerHTML = '↻';
   rerollBtn.style.display = isAnchored ? 'none' : 'flex';
+  rerollBtn.style.flexDirection = 'column';
+  rerollBtn.style.alignItems = 'center';
+  rerollBtn.style.gap = '1px';
+  rerollBtn.style.width = '38px';
+  rerollBtn.style.height = '38px';
+  rerollBtn.style.fontSize = '12px';
+
+  // Calculate pool size for counter
+  const _pool = getEligibleItems(category, state.selectedThemes, state.boardProfile)
+    .filter(i => !state.excludedItems.has(i.name) && !state.anchoredItems.has(i.name));
+  const _q = state.rerollQueues[item.name];
+  const _pos   = _q ? _q.pos + 1 : 1;
+  const _total = _q ? _q.total   : _pool.length;
+
+  rerollBtn.innerHTML =
+    '<span style="font-size:14px;line-height:1.1;">↻</span>' +
+    (_total > 1
+      ? '<span style="font-size:8px;font-weight:700;opacity:0.65;line-height:1;font-family:Lato,sans-serif;">' + _pos + '/' + _total + '</span>'
+      : '');
+
   rerollBtn.addEventListener('click', () => rerollItem(category, item.name, row));
 
   // Hide button (hidden if anchored)
