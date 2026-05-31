@@ -1427,3 +1427,21 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
   flex-shrink: 0;
 }
 .picker-empty { text-align: center; padding: 30px; color: var(--ink-faint); font-style: italic; font-size: 14px; }
+
+/* ── KEEP-AWAKE BAR ── */
+.wake-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 16px;
+  background: var(--gold-pale);
+  border-bottom: 1px solid #e8c97a;
+}
+.wake-bar-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: #7a5a0a;
+}
+.wake-bar.active { background: var(--sage-pale); border-bottom-color: #a8c89a; }
+.wake-bar.active .wake-bar-text { color: #2e5a28; }

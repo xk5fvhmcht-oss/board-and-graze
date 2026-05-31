@@ -46,6 +46,17 @@ const screens = { setup: $('screen-setup'), board: $('screen-board'), shopping: 
 function showScreen(name) {
   Object.entries(screens).forEach(([k, el]) => el.classList.toggle('active', k === name));
   window.scrollTo(0, 0);
+
+  // Wake lock applies only on the board and layout screens (hands-free building).
+  // Keep the user's intent (wake.wanted) but pause the actual lock elsewhere.
+  if (typeof wake !== 'undefined' && wake.supported) {
+    const wakeScreens = (name === 'board' || name === 'layout');
+    if (wakeScreens && wake.wanted && !wake.lock) {
+      acquireWakeLock();
+    } else if (!wakeScreens && wake.lock) {
+      releaseWakeLock();
+    }
+  }
 }
 
 // ── PERSIST ──
@@ -956,6 +967,7 @@ function init() {
   initRoleButtons();
   initProfileButtons();
   initSeasonalToggle();
+  initWakeToggles();
   initSliders();
   $('stepper-val').textContent = state.headCount;
   updateAnchorIndicator();
@@ -1008,6 +1020,67 @@ $('btn-close-picker').addEventListener('click', () => { $('modal-picker').hidden
 $('picker-overlay').addEventListener('click', () => { $('modal-picker').hidden = true; });
 
 
+
+// ═══════════════════════════════════════════
+// SCREEN WAKE LOCK — keep screen on for hands-free board building
+// ═══════════════════════════════════════════
+const wake = {
+  lock: null,
+  wanted: false, // user's intent — persists across visibility changes
+  supported: ('wakeLock' in navigator),
+};
+
+async function acquireWakeLock() {
+  if (!wake.supported) return;
+  try {
+    wake.lock = await navigator.wakeLock.request('screen');
+    wake.lock.addEventListener('release', () => { wake.lock = null; });
+  } catch (e) {
+    // Request can fail (e.g. low battery) — fail quietly
+    wake.lock = null;
+  }
+}
+
+async function releaseWakeLock() {
+  if (wake.lock) {
+    try { await wake.lock.release(); } catch (e) {}
+    wake.lock = null;
+  }
+}
+
+function setWakeWanted(on) {
+  wake.wanted = on;
+  if (on) acquireWakeLock();
+  else releaseWakeLock();
+  // Sync both toggle UIs and bar styling
+  ['board','layout'].forEach(scope => {
+    const t = $('wake-toggle-' + scope);
+    const bar = $('wake-bar-' + scope);
+    if (t) { t.classList.toggle('on', on); t.setAttribute('aria-checked', on ? 'true':'false'); }
+    if (bar) bar.classList.toggle('active', on);
+  });
+}
+
+function initWakeToggles() {
+  // Hide the bars entirely if the API isn't supported — no broken UI
+  if (!wake.supported) {
+    ['wake-bar-board','wake-bar-layout'].forEach(id => { const el=$(id); if(el) el.remove(); });
+    return;
+  }
+  ['board','layout'].forEach(scope => {
+    const bar = $('wake-bar-' + scope);
+    const t = $('wake-toggle-' + scope);
+    if (bar) bar.hidden = false;
+    if (t) t.addEventListener('click', () => setWakeWanted(!wake.wanted));
+  });
+}
+
+// Re-acquire after the OS releases the lock on tab switch / background
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible' && wake.wanted && !wake.lock) {
+    acquireWakeLock();
+  }
+});
 
 window.addEventListener('afterprint', () => {
   delete document.body.dataset.print;

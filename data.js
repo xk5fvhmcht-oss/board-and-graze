@@ -10,7 +10,7 @@
 // Families: foundational (multiple per board OK) | exclusive (one per board max)
 // ============================================================
 
-const APP_VERSION = "1.7.0";
+const APP_VERSION = "1.7.1";
 
 const THEMES = [
   { id: "american",      label: "American",      flag: "🇺🇸" },

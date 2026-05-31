@@ -3,7 +3,7 @@
 // Version 1.6.0
 // ═══════════════════════════════════════════
 
-const CACHE = 'board-graze-v1.7.0';
+const CACHE = 'board-graze-v1.7.1';
 
 const ASSETS = [
   './',
