@@ -11,9 +11,11 @@ const state = {
   headCount:       6,
   categoryLimits:  {},
   currentBoard:    {},
+  rerollQueues:    {},
   // Persisted in localStorage — survive reset
   anchoredItems:   new Set(JSON.parse(localStorage.getItem('anchored') || '[]')),
   excludedItems:   new Set(JSON.parse(localStorage.getItem('excluded') || '[]')),
+  boardHistory:    JSON.parse(localStorage.getItem('boardHistory') || '[]'),
 };
 
 const CAT_META = {
@@ -156,7 +158,7 @@ function rollAndShow() {
     const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
       .filter(item => !state.excludedItems.has(item.name) && !state.anchoredItems.has(item.name));
     const rolled = eligible.length > 0 && n > 0
-      ? rollBoard([...eligible], Math.min(n, eligible.length))
+      ? rollCategory([...eligible], Math.min(n, eligible.length))
       : [];
     board[category] = [...anchored, ...rolled];
   }
@@ -167,8 +169,9 @@ function rollAndShow() {
   showScreen('board');
 }
 
-// Smart roll for a category — uses family constraints from data.js rollBoard logic
-function rollBoard(eligible, n) {
+// Roll items for a single category — applies family constraints
+// (exclusive families capped at one per board, foundational unlimited)
+function rollCategory(eligible, n) {
   const exclusive    = eligible.filter(i => FAMILIES[i.f]?.type === 'exclusive');
   const foundational = eligible.filter(i => FAMILIES[i.f]?.type === 'foundational');
   const shuffledEx   = [...exclusive].sort(() => Math.random() - 0.5);

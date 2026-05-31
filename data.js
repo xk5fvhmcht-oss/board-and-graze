@@ -10,7 +10,7 @@
 // Families: foundational (multiple per board OK) | exclusive (one per board max)
 // ============================================================
 
-const APP_VERSION = "1.6.0";
+const APP_VERSION = "1.6.1";
 
 const THEMES = [
   { id: "american",      label: "American",      flag: "🇺🇸" },
@@ -484,67 +484,9 @@ function pickRandom(arr, n) {
   return shuffled.slice(0, n);
 }
 
-// Smart roll — respects exclusive family constraints on initial roll
-function rollBoard(selectedThemeIds, boardSize, boardProfile) {
-  const n = BOARD_SIZES[boardSize].itemsPerCategory;
-  const result = {};
-
-  for (const category of Object.keys(ITEMS)) {
-    const eligible = getEligibleItems(category, selectedThemeIds, boardProfile)
-      .filter(item => item.f); // must have family tag
-
-    if (eligible.length === 0) { result[category] = []; continue; }
-
-    // Separate exclusive vs foundational items
-    const exclusive   = eligible.filter(i => FAMILIES[i.f]?.type === 'exclusive');
-    const foundational = eligible.filter(i => FAMILIES[i.f]?.type === 'foundational');
-
-    // Shuffle both pools
-    const shuffledEx  = [...exclusive].sort(() => Math.random() - 0.5);
-    const shuffledFnd = [...foundational].sort(() => Math.random() - 0.5);
-
-    const selected = [];
-    const usedFamilies = new Set();
-
-    // First pass — pick exclusive items (one per family)
-    for (const item of shuffledEx) {
-      if (selected.length >= n) break;
-      if (!usedFamilies.has(item.f)) {
-        selected.push(item);
-        usedFamilies.add(item.f);
-      }
-    }
-
-    // Second pass — fill remaining slots with foundational items
-    for (const item of shuffledFnd) {
-      if (selected.length >= n) break;
-      selected.push(item);
-    }
-
-    result[category] = selected;
-  }
-
-  return result;
-}
-
-// Surprise Me — pick compatible themes, avoid all clashes
-function surpriseThemes() {
-  const allIds = THEMES.map(t => t.id);
-
-  // Pick a random affinity group and select 1-3 themes from it
-  const affinityGroup = THEME_AFFINITIES[Math.floor(Math.random() * THEME_AFFINITIES.length)];
-  const shuffled = [...affinityGroup].sort(() => Math.random() - 0.5);
-
-  // Pick 1 to 3 themes from the affinity group
-  const count = Math.floor(Math.random() * 2) + 1; // 1 or 2
-  const chosen = shuffled.slice(0, count);
-
-  // Verify no clashes (shouldn't happen with affinities but safety check)
-  const clashes = themesClash(chosen);
-  if (clashes.length > 0) return [shuffled[0]]; // fallback to single theme
-
-  return chosen;
-}
+// NOTE: Board rolling and Surprise Me theme selection live in app.js
+// (rollCategory + smartSurpriseThemes) because they must weave in anchors,
+// exclusions, and profile-aware coverage. data.js stays pure data + helpers.
 
 function calcServing(category, mealRole, headCount, itemCount) {
   const g = SERVING_GUIDANCE[category];
