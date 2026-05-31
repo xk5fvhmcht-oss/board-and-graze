@@ -132,8 +132,20 @@
       </div>
     </section>
 
+    <!-- SEASONAL TOGGLE -->
+    <section class="section">
+      <label class="seasonal-row">
+        <div class="seasonal-text">
+          <span class="seasonal-label">In-season produce</span>
+          <span class="seasonal-hint" id="seasonal-hint">Prefer fruits &amp; vegetables at their peak right now</span>
+        </div>
+        <button class="toggle" id="seasonal-toggle" role="switch" aria-checked="false">
+          <span class="toggle-knob"></span>
+        </button>
+      </label>
+    </section>
+
     <!-- ROLL BUTTON -->
-    <div class="roll-wrap">
       <div style="display:flex;gap:10px;">
       <button class="btn-surprise" id="btn-surprise" title="Surprise Me — picks compatible themes and rolls">
         <span style="font-size:18px;">🎲</span>
@@ -143,7 +155,6 @@
         <span class="roll-label">Roll the Board</span>
         <span class="roll-hint" id="roll-hint">Select at least one theme</span>
       </button>
-    </div>
     </div>
 
     <p style="text-align:center;font-size:11px;color:#a8937a;padding:8px 0 4px;font-family:Lato,sans-serif;" id="app-version"></p>
@@ -266,6 +277,18 @@
     <div class="modal-actions">
       <button class="btn-secondary" id="btn-cancel-save">Cancel</button>
       <button class="btn-primary" id="btn-confirm-save">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add Item Picker Modal -->
+<div id="modal-picker" class="modal" hidden>
+  <div class="modal-overlay" id="picker-overlay"></div>
+  <div class="modal-sheet">
+    <h2 class="modal-title" id="picker-title">Add to board</h2>
+    <div class="picker-list" id="picker-list"></div>
+    <div class="modal-actions">
+      <button class="btn-secondary" id="btn-close-picker" style="flex:1;">Done</button>
     </div>
   </div>
 </div>

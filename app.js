@@ -10,6 +10,7 @@ const state = {
   boardProfile:    'classic',
   headCount:       6,
   categoryLimits:  {},
+  seasonalMode:    JSON.parse(localStorage.getItem('seasonalMode') || 'false'),
   currentBoard:    {},
   rerollQueues:    {},
   // Persisted in localStorage — survive reset
@@ -138,6 +139,27 @@ function initProfileButtons() {
   });
 }
 
+// ── SEASONAL TOGGLE ──
+function initSeasonalToggle() {
+  const toggle = $('seasonal-toggle');
+  const hint = $('seasonal-hint');
+  const applyState = () => {
+    toggle.classList.toggle('on', state.seasonalMode);
+    toggle.setAttribute('aria-checked', state.seasonalMode ? 'true' : 'false');
+    if (state.seasonalMode) {
+      hint.textContent = 'On — favoring ' + seasonName(currentMonth()).toLowerCase() + ' produce';
+    } else {
+      hint.textContent = 'Prefer fruits & vegetables at their peak right now';
+    }
+  };
+  toggle.addEventListener('click', () => {
+    state.seasonalMode = !state.seasonalMode;
+    localStorage.setItem('seasonalMode', JSON.stringify(state.seasonalMode));
+    applyState();
+  });
+  applyState();
+}
+
 // ── ROLL ──
 $('btn-roll').addEventListener('click', rollAndShow);
 $('btn-reroll-all').addEventListener('click', rollAndShow);
@@ -172,6 +194,14 @@ function rollAndShow() {
 // Roll items for a single category — applies family constraints
 // (exclusive families capped at one per board, foundational unlimited)
 function rollCategory(eligible, n) {
+  // Seasonal soft filter: when seasonal mode is on, prefer in-season items.
+  // If enough in-season items exist to fill the slots, use only those.
+  // Otherwise fall back to the full pool (soft, never blocks a full board).
+  if (state.seasonalMode) {
+    const m = currentMonth();
+    const inSeason = eligible.filter(i => isInSeason(i, m));
+    if (inSeason.length >= n) eligible = inSeason;
+  }
   const exclusive    = eligible.filter(i => FAMILIES[i.f]?.type === 'exclusive');
   const foundational = eligible.filter(i => FAMILIES[i.f]?.type === 'foundational');
   const shuffledEx   = [...exclusive].sort(() => Math.random() - 0.5);
@@ -253,6 +283,15 @@ function renderBoard() {
       card.appendChild(tipEl);
     }
 
+    // Add-to-board button — lets you add a specific item to this board (this session only)
+    if (getCategoryCount(category) > 0) {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'cat-add-btn';
+      addBtn.innerHTML = '+ Add a ' + meta.label.toLowerCase().replace(/s$/, '') + ' item';
+      addBtn.addEventListener('click', () => openPicker(category));
+      card.appendChild(addBtn);
+    }
+
     main.appendChild(card);
   });
 
@@ -313,6 +352,14 @@ function buildItemRow(item, category) {
     badge.className = 'anchor-badge';
     badge.textContent = '⚓ anchored';
     meta.appendChild(badge);
+  }
+
+  // In-season badge — only when seasonal mode is on and the item is a seasonal one currently in season
+  if (state.seasonalMode && item.s && isInSeason(item, currentMonth())) {
+    const sb = document.createElement('span');
+    sb.className = 'season-badge';
+    sb.textContent = '🌱 in season';
+    meta.appendChild(sb);
   }
 
   item.store.forEach(s => {
@@ -908,6 +955,7 @@ function init() {
   initSizeButtons();
   initRoleButtons();
   initProfileButtons();
+  initSeasonalToggle();
   initSliders();
   $('stepper-val').textContent = state.headCount;
   updateAnchorIndicator();
@@ -915,7 +963,52 @@ function init() {
   if (vEl) vEl.textContent = 'v' + APP_VERSION;
 }
 
-// Clean up print attribute after dialog closes
+// ═══════════════════════════════════════════
+// ADD TO BOARD — item picker
+// ═══════════════════════════════════════════
+let pickerCategory = null;
+
+function openPicker(category) {
+  pickerCategory = category;
+  const meta = CAT_META[category];
+  $('picker-title').textContent = 'Add ' + meta.label.toLowerCase();
+
+  const onBoard = (state.currentBoard[category] || []).map(i => i.name);
+  // Eligible by theme + profile, not already on the board, not excluded
+  const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
+    .filter(i => !onBoard.includes(i.name) && !state.excludedItems.has(i.name));
+
+  const list = $('picker-list');
+  list.innerHTML = '';
+
+  if (eligible.length === 0) {
+    list.innerHTML = '<div class="picker-empty">Everything eligible is already on your board. Try Explorer mode or another theme for more options.</div>';
+  } else {
+    eligible.forEach(item => {
+      const row = document.createElement('div');
+      row.className = 'picker-item';
+      const inSeason = state.seasonalMode && item.s && isInSeason(item, currentMonth());
+      row.innerHTML = `
+        <span class="picker-item-name">${item.name}${inSeason ? ' <span class="season-badge">🌱</span>' : ''}</span>
+        <button class="picker-item-add" aria-label="Add">+</button>
+      `;
+      row.addEventListener('click', () => {
+        state.currentBoard[category].push(item);
+        renderBoard();
+        openPicker(category); // refresh picker list so the added item drops off
+      });
+      list.appendChild(row);
+    });
+  }
+
+  $('modal-picker').hidden = false;
+}
+
+$('btn-close-picker').addEventListener('click', () => { $('modal-picker').hidden = true; });
+$('picker-overlay').addEventListener('click', () => { $('modal-picker').hidden = true; });
+
+
+
 window.addEventListener('afterprint', () => {
   delete document.body.dataset.print;
 });
@@ -1443,7 +1536,7 @@ function renderHistory() {
 
     const rollAgainBtn = document.createElement('button');
     rollAgainBtn.className = 'history-btn primary';
-    rollAgainBtn.textContent = 'Roll again';
+    rollAgainBtn.textContent = 'New roll, same themes';
     rollAgainBtn.addEventListener('click', () => {
       // Restore settings and roll fresh board with same params
       state.selectedThemes = [...entry.themes];

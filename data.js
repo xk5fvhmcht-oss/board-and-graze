@@ -10,7 +10,7 @@
 // Families: foundational (multiple per board OK) | exclusive (one per board max)
 // ============================================================
 
-const APP_VERSION = "1.6.3";
+const APP_VERSION = "1.7.0";
 
 const THEMES = [
   { id: "american",      label: "American",      flag: "🇺🇸" },
@@ -246,22 +246,22 @@ const ITEMS = {
 
   fruits: [
     // Fresh — foundational
-    { name: "Red & green grapes",                            store: ["CM","SM"],       themes: ["american","french","italian","mediterranean","spanish","greek","armenian"],       p: "C", f: "fresh_fruit" },
-    { name: "Sliced strawberries",                           store: ["CM","SM"],       themes: ["american","french"],                                                              p: "C", f: "fresh_fruit" },
-    { name: "Sliced Honeycrisp apple",                       store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_fruit" },
-    { name: "Sliced Bosc pear",                              store: ["CM"],            themes: ["american","french","italian"],                                                    p: "C", f: "fresh_fruit" },
-    { name: "Blackberries",                                  store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_fruit" },
-    { name: "Blueberries",                                   store: ["CM"],            themes: ["american"],                                                                       p: "C", f: "fresh_fruit" },
-    { name: "Pomegranate arils",                             store: ["CM","SM"],       themes: ["persian","levantine","gulf","northafrican","greek","armenian","moroccan"],        p: "C", f: "fresh_fruit" },
-    { name: "Sliced mango",                                  store: ["CM","SM"],       themes: ["latin","indian"],                                                                 p: "C", f: "fresh_fruit" },
-    { name: "Sliced papaya",                                 store: ["CM"],            themes: ["latin"],                                                                          p: "S", f: "fresh_fruit" },
+    { name: "Red & green grapes",                            store: ["CM","SM"],       themes: ["american","french","italian","mediterranean","spanish","greek","armenian"],       p: "C", f: "fresh_fruit", s: [8,9,10] },
+    { name: "Sliced strawberries",                           store: ["CM","SM"],       themes: ["american","french"],                                                              p: "C", f: "fresh_fruit", s: [3,4,5,6] },
+    { name: "Sliced Honeycrisp apple",                       store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_fruit", s: [9,10,11] },
+    { name: "Sliced Bosc pear",                              store: ["CM"],            themes: ["american","french","italian"],                                                    p: "C", f: "fresh_fruit", s: [9,10,11,12] },
+    { name: "Blackberries",                                  store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_fruit", s: [6,7,8] },
+    { name: "Blueberries",                                   store: ["CM"],            themes: ["american"],                                                                       p: "C", f: "fresh_fruit", s: [5,6,7,8] },
+    { name: "Pomegranate arils",                             store: ["CM","SM"],       themes: ["persian","levantine","gulf","northafrican","greek","armenian","moroccan"],        p: "C", f: "fresh_fruit", s: [9,10,11,12] },
+    { name: "Sliced mango",                                  store: ["CM","SM"],       themes: ["latin","indian"],                                                                 p: "C", f: "fresh_fruit", s: [4,5,6,7] },
+    { name: "Sliced papaya",                                 store: ["CM"],            themes: ["latin"],                                                                          p: "S", f: "fresh_fruit", s: [5,6,7,8,9,10] },
     // Dates — exclusive family
     { name: "Medjool dates",                                 store: ["SM","AG"],       themes: ["levantine","gulf","persian","moroccan","northafrican","mediterranean","armenian","egyptian"], p: "C", f: "date" },
     { name: "Ajwa dates (Saudi, dark & earthy)",             store: ["SM","AG"],       themes: ["gulf","levantine","persian"],                                                     p: "S", f: "date" },
     { name: "Barhi dates (Iraqi, butterscotch-sweet)",       store: ["SM","AG"],       themes: ["gulf","levantine"],                                                               p: "S", f: "date" },
     { name: "Deglet Noor dates (North African, firm & nutty)", store: ["CM","SM"],     themes: ["northafrican","moroccan","mediterranean"],                                        p: "C", f: "date" },
     // Figs — exclusive
-    { name: "Fresh figs, halved",                            store: ["CM","SM"],       themes: ["mediterranean","french","italian","greek","levantine","moroccan"],                p: "S", f: "fig" },
+    { name: "Fresh figs, halved",                            store: ["CM","SM"],       themes: ["mediterranean","french","italian","greek","levantine","moroccan"],                p: "S", f: "fig", s: [6,7,8,9] },
     { name: "Dried Calimyrna figs",                          store: ["CM","SM"],       themes: ["mediterranean","turkish","persian","levantine","armenian"],                       p: "S", f: "fig" },
     // Dried fruits — foundational (variety is good)
     { name: "Dried apricots",                                store: ["CM","SM","AG"],  themes: ["turkish","persian","gulf","mediterranean","armenian","moroccan"],                 p: "C", f: "dried_fruit" },
@@ -416,23 +416,23 @@ const ITEMS = {
   ],
 
   vegetables: [
-    { name: "Cherry tomatoes",                               store: ["CM","SM"],       themes: ["italian","mediterranean","greek","levantine","gulf","spanish","turkish","egyptian"],                             p: "C", f: "fresh_veg" },
+    { name: "Cherry tomatoes",                               store: ["CM","SM"],       themes: ["italian","mediterranean","greek","levantine","gulf","spanish","turkish","egyptian"],                             p: "C", f: "fresh_veg", s: [6,7,8,9] },
     { name: "Carrot sticks",                                 store: ["CM","SM"],       themes: ["american","french","mediterranean"],                                              p: "C", f: "fresh_veg" },
     { name: "Celery sticks",                                 store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_veg" },
     { name: "Cucumber spears",                               store: ["CM"],            themes: ["american","greek","mediterranean"],                                               p: "C", f: "fresh_veg" },
     { name: "Bell pepper strips",                            store: ["CM","SM"],       themes: ["american","latin","mediterranean","indian","spanish","turkish","egyptian"],                                      p: "C", f: "fresh_veg" },
     { name: "Persian cucumbers, sliced",                     store: ["CM","SM"],       themes: ["persian","levantine","gulf","greek","mediterranean","turkish","egyptian","armenian"],                             p: "C", f: "fresh_veg" },
     { name: "Radishes, trimmed",                             store: ["CM","SM"],       themes: ["french","persian","levantine","gulf","mediterranean","moroccan","spanish","turkish","egyptian"],                 p: "C", f: "fresh_veg" },
-    { name: "Snap peas",                                     store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_veg" },
+    { name: "Snap peas",                                     store: ["CM"],            themes: ["american","french"],                                                              p: "C", f: "fresh_veg", s: [3,4,5,6] },
     { name: "Broccoli florets",                              store: ["CM"],            themes: ["american","italian"],                                                             p: "C", f: "fresh_veg" },
     { name: "Cauliflower florets",                           store: ["CM"],            themes: ["american","mediterranean","levantine","gulf","indian"],                           p: "C", f: "fresh_veg" },
     { name: "Green onions / scallions",                      store: ["CM","SM"],       themes: ["persian","levantine","gulf","american","armenian"],                               p: "C", f: "fresh_veg" },
     // Fresh herbs — foundational (variety welcome)
     { name: "Fresh mint sprigs",                             store: ["CM","SM"],       themes: ["persian","levantine","gulf","greek","northafrican","moroccan","armenian"],        p: "C", f: "fresh_herb" },
-    { name: "Fresh basil leaves",                            store: ["CM"],            themes: ["italian","mediterranean","persian"],                                              p: "S", f: "fresh_herb" },
+    { name: "Fresh basil leaves",                            store: ["CM"],            themes: ["italian","mediterranean","persian"],                                              p: "S", f: "fresh_herb", s: [5,6,7,8,9] },
     { name: "Fresh dill",                                    store: ["CM","SM"],       themes: ["persian","greek","levantine","armenian"],                                         p: "S", f: "fresh_herb" },
-    { name: "Fresh tarragon",                                store: ["CM","SM"],       themes: ["persian","french","armenian"],                                                    p: "E", f: "fresh_herb" },
-    { name: "Endive leaves",                                 store: ["CM"],            themes: ["french","italian"],                                                               p: "E", f: "fresh_veg" },
+    { name: "Fresh tarragon",                                store: ["CM","SM"],       themes: ["persian","french","armenian"],                                                    p: "E", f: "fresh_herb", s: [4,5,6,7,8] },
+    { name: "Endive leaves",                                 store: ["CM"],            themes: ["french","italian"],                                                               p: "E", f: "fresh_veg", s: [10,11,12,1,2] },
   ],
 
   extras: [
@@ -486,6 +486,26 @@ function getEligibleItems(category, selectedThemeIds, boardProfile) {
     item.themes.some(t => selectedThemeIds.includes(t)) &&
     allowed.includes(item.p)
   );
+}
+
+// Is an item in season for a given month (1-12)?
+// Items without an `s` tag are year-round and always in season.
+function isInSeason(item, month) {
+  if (!item.s) return true;
+  return item.s.includes(month);
+}
+
+// Current month 1-12
+function currentMonth() {
+  return new Date().getMonth() + 1;
+}
+
+// Season label for a month
+function seasonName(month) {
+  if ([3,4,5].includes(month)) return "Spring";
+  if ([6,7,8].includes(month)) return "Summer";
+  if ([9,10,11].includes(month)) return "Fall";
+  return "Winter";
 }
 
 function pickRandom(arr, n) {

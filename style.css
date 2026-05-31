@@ -1329,3 +1329,101 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
 }
 .modal-actions .btn-secondary { flex: 1; }
 .modal-actions .btn-primary { flex: 2; }
+
+/* ── SEASONAL TOGGLE ── */
+.seasonal-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.seasonal-text { display: flex; flex-direction: column; gap: 2px; }
+.seasonal-label { font-size: 14px; font-weight: 700; color: var(--ink); }
+.seasonal-hint { font-size: 12px; color: var(--ink-faint); font-weight: 300; }
+.toggle {
+  width: 48px; height: 28px;
+  border-radius: 20px;
+  background: var(--border-md);
+  border: none;
+  position: relative;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: background 0.2s;
+  padding: 0;
+}
+.toggle.on { background: var(--sage); }
+.toggle-knob {
+  position: absolute;
+  top: 3px; left: 3px;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: #fff;
+  transition: transform 0.2s;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.toggle.on .toggle-knob { transform: translateX(20px); }
+
+/* In-season badge on item rows */
+.season-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #2e5a28;
+  background: var(--sage-pale);
+  border: 1px solid #a8c89a;
+  border-radius: 20px;
+  padding: 1px 6px;
+  letter-spacing: 0.03em;
+}
+
+/* ── ADD TO BOARD ── */
+.cat-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--rust);
+  background: none;
+  border: 1px dashed var(--border-md);
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  cursor: pointer;
+  font-family: var(--font-body);
+  margin-top: 8px;
+  width: 100%;
+  justify-content: center;
+  transition: background 0.12s, border-color 0.12s;
+}
+.cat-add-btn:hover { background: var(--parchment-dk); border-color: var(--rust); }
+
+/* Add-item picker modal */
+.picker-list {
+  max-height: 50vh;
+  overflow-y: auto;
+  margin: 12px 0;
+}
+.picker-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 11px 4px;
+  border-bottom: 1px dashed var(--border);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.picker-item:active { background: var(--parchment-dk); }
+.picker-item-name { font-size: 14px; color: var(--ink); flex: 1; }
+.picker-item-add {
+  font-size: 18px; font-weight: 700; color: var(--rust);
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--rust-pale); border: none;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.picker-empty { text-align: center; padding: 30px; color: var(--ink-faint); font-style: italic; font-size: 14px; }
