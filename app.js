@@ -232,7 +232,14 @@ function renderBoard() {
     if (items.length === 0) {
       const empty = document.createElement('p');
       empty.className = 'empty-cat';
-      empty.textContent = getCategoryCount(category) === 0 ? 'Category excluded — adjust in Customize' : 'No matching items for selected themes';
+      if (getCategoryCount(category) === 0) {
+        empty.textContent = 'Category excluded — adjust in Customize';
+      } else if (category === 'meats') {
+        // Honest, gracious framing — some traditions are vegetarian-leaning
+        empty.textContent = 'No cold cured meats in this tradition — let the cheeses, dips, and breads lead.';
+      } else {
+        empty.textContent = 'No matching items — try adding a compatible theme or Explorer mode.';
+      }
       itemsEl.appendChild(empty);
     } else {
       items.forEach(item => itemsEl.appendChild(buildItemRow(item, category)));

@@ -10,7 +10,7 @@
 // Families: foundational (multiple per board OK) | exclusive (one per board max)
 // ============================================================
 
-const APP_VERSION = "1.6.2";
+const APP_VERSION = "1.6.3";
 
 const THEMES = [
   { id: "american",      label: "American",      flag: "🇺🇸" },
@@ -198,7 +198,6 @@ const ITEMS = {
     { name: "Cecina (Spanish dry-cured beef, sliced)",        store: ["CM"],            themes: ["spanish","mediterranean"],                                                        p: "S", f: "cured_meat" },
     { name: "Carne seca (Latin dried beef, sliced)",          store: ["CM"],            themes: ["latin"],                                                                          p: "S", f: "cured_meat" },
     { name: "Beef salami, harissa-spiced",                    store: ["CM","SM"],       themes: ["moroccan","northafrican"],                                                        p: "S", f: "cured_meat" },
-    { name: "Chicken tikka pieces (cooked, chilled)",         store: ["CM"],            themes: ["indian"],                                                                         p: "S", f: "deli_meat" },
   ],
 
   cheeses: [
@@ -309,7 +308,6 @@ const ITEMS = {
     { name: "Harcha (Moroccan semolina griddle bread)",      store: ["SM"],            themes: ["moroccan"],                                                                       p: "E", f: "flatbread" },
     { name: "Picos (Andalusian mini breadsticks)",            store: ["CM"],            themes: ["spanish","mediterranean"],                                                        p: "S", f: "cracker" },
     { name: "Simit (Turkish sesame bread ring)",              store: ["AG","SM"],       themes: ["turkish"],                                                                        p: "C", f: "flatbread" },
-    { name: "Khobz (Moroccan everyday round bread)",          store: ["SM"],            themes: ["moroccan","northafrican"],                                                        p: "C", f: "flatbread" },
   ],
 
   nuts: [
