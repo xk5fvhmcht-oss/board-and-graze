@@ -11,6 +11,7 @@ const state = {
   headCount:       6,
   categoryLimits:  {},
   seasonalMode:    JSON.parse(localStorage.getItem('seasonalMode') || 'false'),
+  primaryWeight:   75, // % share of board for the primary (first-selected) cuisine
   currentBoard:    {},
   rerollQueues:    {},
   // Persisted in localStorage — survive reset
@@ -96,9 +97,28 @@ function toggleTheme(id) {
 }
 
 function updateThemeUI() {
-  document.querySelectorAll('.theme-tile').forEach(tile =>
-    tile.classList.toggle('selected', state.selectedThemes.includes(tile.dataset.id))
-  );
+  const primary = state.selectedThemes[0] || null;
+
+  document.querySelectorAll('.theme-tile').forEach(tile => {
+    const id = tile.dataset.id;
+    const isSelected = state.selectedThemes.includes(id);
+    tile.classList.toggle('selected', isSelected);
+
+    // Crown on the primary (first-selected) tile
+    let crown = tile.querySelector('.theme-crown');
+    if (isSelected && id === primary && state.selectedThemes.length >= 2) {
+      if (!crown) {
+        crown = document.createElement('span');
+        crown.className = 'theme-crown';
+        crown.textContent = '👑';
+        crown.title = 'Primary cuisine';
+        tile.appendChild(crown);
+      }
+    } else if (crown) {
+      crown.remove();
+    }
+  });
+
   const clashes = themesClash(state.selectedThemes);
   const warn = $('clash-warning');
   if (clashes.length > 0) {
@@ -107,14 +127,51 @@ function updateThemeUI() {
   } else {
     warn.style.display = 'none';
   }
+
+  // Blend slider — only visible with 2+ cuisines
+  const blend = $('blend-control');
+  if (state.selectedThemes.length >= 2) {
+    blend.hidden = false;
+    updateBlendLabel();
+  } else {
+    blend.hidden = true;
+  }
+
   const canRoll = state.selectedThemes.length > 0;
   const btn = $('btn-roll');
   btn.disabled = !canRoll;
   $('roll-hint').textContent = canRoll
     ? state.selectedThemes.length === 1
       ? THEMES.find(t => t.id === state.selectedThemes[0]).label + ' board'
-      : state.selectedThemes.length + ' themes selected'
+      : THEMES.find(t => t.id === primary).label + '-led · ' + state.selectedThemes.length + ' cuisines'
     : 'Select at least one theme';
+}
+
+function updateBlendLabel() {
+  const primary = state.selectedThemes[0];
+  if (!primary) return;
+  const label = THEMES.find(t => t.id === primary).label;
+  // Feel-based strength, not a number — food goes by feel
+  let strength;
+  const w = state.primaryWeight;
+  if (w <= 55)      strength = 'balanced blend';
+  else if (w <= 65) strength = 'lightly ' + label + '-led';
+  else if (w <= 75) strength = label + '-led';
+  else if (w <= 80) strength = 'strongly ' + label + '-led';
+  else              strength = 'mostly ' + label;
+  $('blend-label').textContent = 'Blend';
+  $('blend-value').textContent = strength;
+  const slider = $('blend-slider');
+  if (slider) slider.value = state.primaryWeight;
+}
+
+function initBlendSlider() {
+  const slider = $('blend-slider');
+  if (!slider) return;
+  slider.addEventListener('input', () => {
+    state.primaryWeight = parseInt(slider.value, 10);
+    updateBlendLabel();
+  });
 }
 
 // ── SIZE / ROLE / PROFILE ──
@@ -183,6 +240,13 @@ function getCategoryCount(category) {
 function rollAndShow() {
   const board = {};
 
+  // Determine primary theme (first selected) and whether weighting applies
+  const primary = state.selectedThemes[0] || null;
+  const hasAccents = state.selectedThemes.length >= 2;
+  const primaryShare = hasAccents ? (state.primaryWeight || 75) / 100 : 1;
+
+  // First pass: build eligible pools and anchors per category
+  const pools = {};
   for (const category of Object.keys(ITEMS)) {
     const anchored = ITEMS[category].filter(item =>
       state.anchoredItems.has(item.name) && !state.excludedItems.has(item.name)
@@ -190,9 +254,47 @@ function rollAndShow() {
     const n = getCategoryCount(category);
     const eligible = getEligibleItems(category, state.selectedThemes, state.boardProfile)
       .filter(item => !state.excludedItems.has(item.name) && !state.anchoredItems.has(item.name));
-    const rolled = eligible.length > 0 && n > 0
-      ? rollCategory([...eligible], Math.min(n, eligible.length))
-      : [];
+    pools[category] = { anchored, n, eligible };
+  }
+
+  // Compute board-level accent budget (only when weighting active)
+  // Total non-anchor slots across all categories × accent share = how many accent items the board gets
+  let accentBudget = 0;
+  if (hasAccents) {
+    let totalSlots = 0;
+    for (const category of Object.keys(ITEMS)) {
+      const { anchored, n, eligible } = pools[category];
+      const fillable = Math.min(Math.max(0, n - anchored.length), eligible.length);
+      totalSlots += fillable;
+    }
+    accentBudget = Math.round(totalSlots * (1 - primaryShare));
+  }
+
+  // Helper: is an item primary-themed? (tagged with the primary theme = on-spine)
+  const isPrimary = item => primary && item.themes.includes(primary);
+
+  // Roll each category. Spread accents across categories: shuffle category order
+  // so accent placement isn't biased toward the first categories.
+  const catOrder = Object.keys(ITEMS).sort(() => Math.random() - 0.5);
+
+  for (const category of catOrder) {
+    const { anchored, n, eligible } = pools[category];
+    const slots = Math.min(Math.max(0, n - anchored.length), eligible.length);
+
+    let rolled = [];
+    if (slots > 0) {
+      // How many accent items may this category take?
+      // Spread: at most 1 accent per category until budget forces more,
+      // and never more accents than primary items in the same category.
+      let catAccentAllowance = 0;
+      if (hasAccents && accentBudget > 0) {
+        catAccentAllowance = Math.min(1, accentBudget, slots);
+      }
+      rolled = rollCategory([...eligible], slots, isPrimary, catAccentAllowance);
+      // Decrement the global budget by how many accents we actually placed
+      const placedAccents = rolled.filter(i => !isPrimary(i)).length;
+      accentBudget -= placedAccents;
+    }
     board[category] = [...anchored, ...rolled];
   }
 
@@ -202,30 +304,65 @@ function rollAndShow() {
   showScreen('board');
 }
 
-// Roll items for a single category — applies family constraints
-// (exclusive families capped at one per board, foundational unlimited)
-function rollCategory(eligible, n) {
-  // Seasonal soft filter: when seasonal mode is on, prefer in-season items.
-  // If enough in-season items exist to fill the slots, use only those.
-  // Otherwise fall back to the full pool (soft, never blocks a full board).
+// Roll items for a single category — applies family constraints.
+// When weighting is active, isPrimary() classifies items and accentAllowance
+// caps how many accent (non-primary) items this category may take.
+// Bias with fallback: prefers primary items, fills with accents only up to
+// allowance, then tops up with whatever remains so a slot is never left empty.
+function rollCategory(eligible, n, isPrimary, accentAllowance) {
+  // Seasonal soft filter (unchanged)
   if (state.seasonalMode) {
     const m = currentMonth();
     const inSeason = eligible.filter(i => isInSeason(i, m));
     if (inSeason.length >= n) eligible = inSeason;
   }
-  const exclusive    = eligible.filter(i => FAMILIES[i.f]?.type === 'exclusive');
-  const foundational = eligible.filter(i => FAMILIES[i.f]?.type === 'foundational');
-  const shuffledEx   = [...exclusive].sort(() => Math.random() - 0.5);
-  const shuffledFnd  = [...foundational].sort(() => Math.random() - 0.5);
-  const selected = []; const usedFamilies = new Set();
-  for (const item of shuffledEx) {
-    if (selected.length >= n) break;
-    if (!usedFamilies.has(item.f)) { selected.push(item); usedFamilies.add(item.f); }
+
+  // Weighting mode: split pool into primary and accent, prefer primary,
+  // cap accents at allowance. If no weighting, isPrimary is undefined → treat all equal.
+  const weighting = typeof isPrimary === 'function';
+
+  const pickFamilyAware = (pool, limit, usedFamilies, selected) => {
+    const exclusive    = pool.filter(i => FAMILIES[i.f]?.type === 'exclusive');
+    const foundational = pool.filter(i => FAMILIES[i.f]?.type === 'foundational');
+    const shuffledEx   = [...exclusive].sort(() => Math.random() - 0.5);
+    const shuffledFnd  = [...foundational].sort(() => Math.random() - 0.5);
+    for (const item of shuffledEx) {
+      if (selected.length >= limit) break;
+      if (!usedFamilies.has(item.f) && !selected.includes(item)) {
+        selected.push(item); usedFamilies.add(item.f);
+      }
+    }
+    for (const item of shuffledFnd) {
+      if (selected.length >= limit) break;
+      if (!selected.includes(item)) selected.push(item);
+    }
+  };
+
+  const selected = [];
+  const usedFamilies = new Set();
+
+  if (!weighting) {
+    // Original behavior — single cuisine or no weighting
+    pickFamilyAware(eligible, n, usedFamilies, selected);
+    return selected;
   }
-  for (const item of shuffledFnd) {
-    if (selected.length >= n) break;
-    selected.push(item);
+
+  const primaryPool = eligible.filter(i => isPrimary(i));
+  const accentPool  = eligible.filter(i => !isPrimary(i));
+
+  // Fill primary first, up to (n - accentAllowance) slots
+  const primaryTarget = Math.max(0, n - accentAllowance);
+  pickFamilyAware(primaryPool, primaryTarget, usedFamilies, selected);
+
+  // Then accents, up to allowance (and overall n)
+  pickFamilyAware(accentPool, Math.min(n, selected.length + accentAllowance), usedFamilies, selected);
+
+  // Fallback top-up: if still short (thin pools), fill from whatever remains
+  if (selected.length < n) {
+    const remaining = eligible.filter(i => !selected.includes(i));
+    pickFamilyAware(remaining, n, usedFamilies, selected);
   }
+
   return selected;
 }
 
@@ -947,6 +1084,7 @@ function resetApp() {
   state.boardProfile    = 'classic';
   state.categoryLimits  = {};
   state.currentBoard    = {};
+  state.primaryWeight   = 75;
   // Anchors and excludes survive reset intentionally
 
   document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === 'M'));
@@ -968,6 +1106,7 @@ function init() {
   initProfileButtons();
   initSeasonalToggle();
   initWakeToggles();
+  initBlendSlider();
   initSliders();
   $('stepper-val').textContent = state.headCount;
   updateAnchorIndicator();
@@ -1471,6 +1610,7 @@ $('btn-print-layout').addEventListener('click', () => {
 $('btn-surprise').addEventListener('click', () => {
   const chosen = smartSurpriseThemes(state.boardProfile);
   state.selectedThemes = chosen;
+  state.primaryWeight = 75; // first pick becomes primary at default weight
   updateThemeUI();
   rollAndShow();
 });

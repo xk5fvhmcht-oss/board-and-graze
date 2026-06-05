@@ -1445,3 +1445,65 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
 }
 .wake-bar.active { background: var(--sage-pale); border-bottom-color: #a8c89a; }
 .wake-bar.active .wake-bar-text { color: #2e5a28; }
+
+/* ── BLEND SLIDER (primary cuisine weight) ── */
+.blend-control {
+  margin-top: 14px;
+  padding: 14px;
+  background: var(--parchment-dk);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.blend-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.blend-label { font-size: 13px; font-weight: 700; color: var(--ink); }
+.blend-value { font-size: 13px; font-weight: 700; color: var(--rust); }
+.blend-slider {
+  width: 100%;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  background: linear-gradient(to right, var(--sage) 0%, var(--rust) 100%);
+  outline: none;
+}
+.blend-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--rust);
+  cursor: pointer;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+}
+.blend-slider::-moz-range-thumb {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #fff;
+  border: 2px solid var(--rust);
+  cursor: pointer;
+}
+.blend-ends {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ── PRIMARY CROWN on theme tile ── */
+.theme-tile { position: relative; }
+.theme-crown {
+  position: absolute;
+  top: -7px; right: -7px;
+  font-size: 15px;
+  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  pointer-events: none;
+}

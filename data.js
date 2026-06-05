@@ -10,7 +10,7 @@
 // Families: foundational (multiple per board OK) | exclusive (one per board max)
 // ============================================================
 
-const APP_VERSION = "1.7.1";
+const APP_VERSION = "1.8.0";
 
 const THEMES = [
   { id: "american",      label: "American",      flag: "🇺🇸" },
@@ -214,6 +214,7 @@ const ITEMS = {
     { name: "Paneer, fresh cubed",                           store: ["CM"],            themes: ["indian"],                                                                         p: "C", f: "cheese_fresh" },
     { name: "Brie de Meaux",                                 store: ["CM"],            themes: ["french","mediterranean"],                                                         p: "S", f: "cheese_soft" },
     { name: "Camembert",                                     store: ["CM"],            themes: ["french"],                                                                         p: "S", f: "cheese_soft" },
+    { name: "Boursin (garlic & herb soft cheese)",           store: ["CM"],            themes: ["french"],                                                                         p: "C", f: "cheese_fresh" },
     { name: "Manchego (6-month aged)",                       store: ["CM"],            themes: ["spanish","mediterranean"],                                                        p: "S", f: "cheese_aged" },
     { name: "Parmigiano Reggiano",                           store: ["CM"],            themes: ["italian","mediterranean"],                                                        p: "S", f: "cheese_aged" },
     { name: "Grana Padano",                                  store: ["CM"],            themes: ["italian","mediterranean"],                                                        p: "S", f: "cheese_aged" },
