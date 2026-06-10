@@ -609,9 +609,9 @@ function findCategoryForItem(name) {
 // ── REROLL SINGLE ITEM — discovery queue ──
 function getOrCreateQueue(itemName, category) {
   if (!state.rerollQueues[itemName]) {
-    // Build full eligible pool for this slot — all items that match theme+profile
-    // No family constraint in re-roll — user is discovering everything
-    const allOnBoard = state.currentBoard[category].map(i => i.name);
+    // Build full eligible pool for this slot — all items that match theme+profile.
+    // No family constraint in re-roll — user is discovering everything.
+    // (Duplicates with other on-board slots are skipped at pick time in rerollItem.)
     const pool = getEligibleItems(category, state.selectedThemes, state.boardProfile)
       .filter(i => !state.excludedItems.has(i.name) && !state.anchoredItems.has(i.name));
     // Shuffle pool, put current item last so it cycles back eventually
@@ -625,16 +625,19 @@ function rerollItem(category, currentName, rowEl) {
   const q = getOrCreateQueue(currentName, category);
   if (q.total <= 1) return; // nothing else to show
 
-  // Advance position, skip current item
+  // Names already on the board in this category (other slots) — must not duplicate
+  const onBoard = new Set(state.currentBoard[category].map(i => i.name));
+
+  // Advance position, skip current item AND anything already on the board
   let attempts = 0;
   let newItem;
   do {
     q.pos = (q.pos + 1) % q.total;
     newItem = q.queue[q.pos];
     attempts++;
-  } while (newItem.name === currentName && attempts < q.total);
+  } while ((newItem.name === currentName || onBoard.has(newItem.name)) && attempts < q.total);
 
-  if (!newItem || newItem.name === currentName) return;
+  if (!newItem || newItem.name === currentName || onBoard.has(newItem.name)) return;
 
   // Transfer queue key to new item name
   state.rerollQueues[newItem.name] = { ...q };
@@ -1673,6 +1676,10 @@ $('btn-save-board').addEventListener('click', () => {
 $('btn-cancel-save').addEventListener('click', () => { $('modal-save').hidden = true; });
 $('modal-overlay').addEventListener('click', () => { $('modal-save').hidden = true; });
 
+$('board-name-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') { e.preventDefault(); $('btn-confirm-save').click(); }
+});
+
 $('btn-confirm-save').addEventListener('click', () => {
   const name = $('board-name-input').value.trim() || 'Untitled Board';
   const entry = {
@@ -1684,6 +1691,7 @@ $('btn-confirm-save').addEventListener('click', () => {
     mealRole:  state.mealRole,
     profile:   state.boardProfile,
     headCount: state.headCount,
+    blend:     state.primaryWeight,
     board:     JSON.parse(JSON.stringify(state.currentBoard)), // deep copy
   };
   state.boardHistory.unshift(entry); // newest first
@@ -1757,6 +1765,7 @@ function renderHistory() {
       state.mealRole        = entry.mealRole;
       state.boardProfile    = entry.profile;
       state.headCount       = entry.headCount;
+      state.primaryWeight   = entry.blend || 75; // older saves default to 75
       // Update UI
       document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === entry.boardSize));
       document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === entry.mealRole));
@@ -1776,6 +1785,7 @@ function renderHistory() {
       state.mealRole        = entry.mealRole;
       state.boardProfile    = entry.profile;
       state.headCount       = entry.headCount;
+      state.primaryWeight   = entry.blend || 75;
       state.currentBoard    = JSON.parse(JSON.stringify(entry.board));
       state.rerollQueues    = {};
       document.querySelectorAll('.size-btn').forEach(b => b.classList.toggle('active', b.dataset.size === entry.boardSize));
