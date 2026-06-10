@@ -1507,3 +1507,18 @@ input[type="range"].cat-slider::-webkit-slider-thumb:active { transform: scale(1
   filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
   pointer-events: none;
 }
+
+/* ── ACCENT BADGE — item from an accent (non-primary) cuisine ── */
+.accent-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #5a4a7a;
+  background: #f0eaf8;
+  border: 1px solid #c8b8e0;
+  border-radius: 20px;
+  padding: 1px 7px;
+  letter-spacing: 0.03em;
+}

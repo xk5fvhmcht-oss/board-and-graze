@@ -510,6 +510,21 @@ function buildItemRow(item, category) {
     meta.appendChild(sb);
   }
 
+  // Accent badge — item came from an accent (non-primary) cuisine.
+  // Only when weighting is active (2+ cuisines) and the item isn't on the primary spine.
+  const primaryTheme = state.selectedThemes[0];
+  if (state.selectedThemes.length >= 2 && primaryTheme && !item.themes.includes(primaryTheme)) {
+    const accentId = state.selectedThemes.slice(1).find(t => item.themes.includes(t));
+    const accentTheme = THEMES.find(t => t.id === accentId);
+    if (accentTheme) {
+      const ab = document.createElement('span');
+      ab.className = 'accent-badge';
+      ab.textContent = accentTheme.flag + ' accent';
+      ab.title = accentTheme.label + ' accent on a ' + (THEMES.find(t => t.id === primaryTheme)?.label || '') + '-led board';
+      meta.appendChild(ab);
+    }
+  }
+
   item.store.forEach(s => {
     const badge = document.createElement('span');
     badge.className = `store-badge store-${s}`;
