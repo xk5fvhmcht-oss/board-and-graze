@@ -178,11 +178,10 @@ function initBlendSlider() {
 function initSizeButtons() {
   document.querySelectorAll('.size-btn').forEach(btn => {
     btn.addEventListener('click', () => {
-      document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
       state.boardSize = btn.dataset.size;
       state.categoryLimits = {};
       updateSliders();
+      syncSizeHighlight(); // restores highlight, hides "customized" hint
     });
   });
 }
@@ -1036,7 +1035,28 @@ $('stepper-up').addEventListener('click', () => {
   if (state.headCount < 30) { state.headCount++; $('stepper-val').textContent = state.headCount; }
 });
 
+// ── CUSTOMIZE: RESET TO DEFAULTS ──
+$('btn-customize-reset').addEventListener('click', () => {
+  state.headCount = 6;
+  state.categoryLimits = {};
+  $('stepper-val').textContent = state.headCount;
+  updateSliders();          // sliders back to the board-size default
+  syncSizeHighlight();      // restore S/M/L highlight, hide "customized"
+});
+
 // ── CATEGORY SLIDERS ──
+// Keep the S/M/L highlight honest: if any slider differs from the current
+// board size default, no size is truly active — show "customized" instead.
+function syncSizeHighlight() {
+  const defaultVal = BOARD_SIZES[state.boardSize].itemsPerCategory;
+  const isCustom = Object.values(state.categoryLimits).some(v => v !== defaultVal);
+  document.querySelectorAll('.size-btn').forEach(b =>
+    b.classList.toggle('active', !isCustom && b.dataset.size === state.boardSize)
+  );
+  const hint = $('size-custom-hint');
+  if (hint) hint.hidden = !isCustom;
+}
+
 function initSliders() {
   const container = $('cat-sliders');
   container.innerHTML = '';
@@ -1062,6 +1082,7 @@ function initSliders() {
       valDisplay.textContent = v;
       valDisplay.className = 'slider-val' + (v === 0 ? ' zero' : '');
       label.className = 'slider-cat-name' + (v === 0 ? ' zero' : '');
+      syncSizeHighlight();
     });
     row.appendChild(label);
     row.appendChild(slider);
@@ -1111,6 +1132,7 @@ function resetApp() {
 
   updateThemeUI();
   updateSliders();
+  syncSizeHighlight();
   showScreen('setup');
 }
 
@@ -1786,6 +1808,7 @@ function renderHistory() {
       document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === entry.mealRole));
       document.querySelectorAll('.profile-btn').forEach(b => b.classList.toggle('active', b.dataset.profile === entry.profile));
       $('stepper-val').textContent = entry.headCount;
+      syncSizeHighlight();
       updateThemeUI();
       rollAndShow();
     });
@@ -1807,6 +1830,7 @@ function renderHistory() {
       document.querySelectorAll('.role-btn').forEach(b => b.classList.toggle('active', b.dataset.role === entry.mealRole));
       document.querySelectorAll('.profile-btn').forEach(b => b.classList.toggle('active', b.dataset.profile === entry.profile));
       $('stepper-val').textContent = entry.headCount;
+      syncSizeHighlight();
       updateThemeUI();
       renderBoard();
       showScreen('board');
